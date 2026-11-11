@@ -109,7 +109,6 @@ export const projects: Project[] = [
     subtitle: 'WhatsApp BI across two businesses',
     category: 'AI Agents',
     poster: '/thumbnails/report-agent.webp',
-    phoneFrame: true,
     description:
       'WhatsApp BI agent spanning parcel logistics and fuel-station data — cron SQL digests with no LLM, plus a LangGraph lane that only calls whitelisted parameterized tools.',
     features: [

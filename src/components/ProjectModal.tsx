@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { projects, type Project } from '../data/site'
@@ -13,6 +13,21 @@ export function ProjectModal({ index, onClose, onIndex }: ProjectModalProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLElement | null>(null)
   const project: Project | undefined = index === null ? undefined : projects[index]
+  const [portraitPoster, setPortraitPoster] = useState(false)
+
+  useEffect(() => {
+    if (!project) return
+    let cancel = false
+    setPortraitPoster(false)
+    const image = new Image()
+    image.onload = () => {
+      if (!cancel) setPortraitPoster(image.naturalHeight > image.naturalWidth)
+    }
+    image.src = project.poster
+    return () => {
+      cancel = true
+    }
+  }, [project])
 
   useEffect(() => {
     if (index === null) return
@@ -84,8 +99,8 @@ export function ProjectModal({ index, onClose, onIndex }: ProjectModalProps) {
               </div>
             </header>
             <div className="px-5 md:px-7">
-              <div className={`overflow-hidden rounded-2xl bg-black ${project.phoneFrame ? 'mx-auto aspect-[9/16] max-w-xs' : 'aspect-video'}`}>
-                <img src={project.poster} alt="" className="h-full w-full object-cover object-top" />
+              <div className={`overflow-hidden rounded-2xl bg-black ${portraitPoster ? 'mx-auto aspect-[9/16] max-w-xs' : 'aspect-video'}`}>
+                <img src={project.poster} alt="" className="h-full w-full object-contain" />
               </div>
             </div>
             <footer className="space-y-4 p-5 md:p-7">

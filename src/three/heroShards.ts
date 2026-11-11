@@ -253,10 +253,10 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
           u = uStart + nx * (1 - uStart)
           v = ny * fitY + (1 - fitY) / 2
         } else {
-          // The graded plate keeps the face near 78% of the width. Hold that
+          // The generated plate keeps the face near 69% of the width. Hold that
           // point in the right side of the panel so a tall 768px frame still
           // contains the whole face.
-          const u0 = Math.min(Math.max(0.78 - 0.72 * fitX, 0), 1 - fitX)
+          const u0 = Math.min(Math.max(0.69 - 0.72 * fitX, 0), 1 - fitX)
           u = u0 + nx * fitX
           v = ny * fitY + (1 - fitY) / 2
         }
