@@ -29,7 +29,8 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
     let loaded = document.readyState === 'complete' ? 1 : 0
     let scene = 0
     const started = performance.now()
-    const sources = [profile.portrait, profile.hero, profile.hero, '/favicon.png']
+    const narrow = window.matchMedia('(max-width: 767px)').matches
+    const sources = narrow ? ['/hero/hero-mobile.webp'] : [profile.hero, profile.portrait]
     sources.forEach((src) => {
       const image = new Image()
       const finish = () => {
@@ -50,23 +51,30 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
     let finished = false
     const tick = (now: number) => {
       const elapsed = now - started
-      if (document.querySelector('[data-scene-ready]')) scene = 1
-      else if (elapsed > 6000) scene = 1
-      target = Math.min(1, images * 0.45 + fonts * 0.2 + loaded * 0.15 + scene * 0.2)
-      target = Math.min(target, elapsed / 2000)
-      if (elapsed > 7000 || (reduced && elapsed >= 2000)) target = 1
+      if (narrow) {
+        scene = images >= 0.99 || elapsed > 900 ? 1 : 0
+        target = Math.min(1, images * 0.55 + scene * 0.45, elapsed / 700)
+        if (elapsed > 1600) target = 1
+      } else {
+        if (document.querySelector('[data-scene-ready]')) scene = 1
+        else if (elapsed > 3500) scene = 1
+        target = Math.min(1, images * 0.45 + fonts * 0.2 + loaded * 0.15 + scene * 0.2)
+        target = Math.min(target, elapsed / 2000)
+        if (elapsed > 7000) target = 1
+      }
+      if (reduced && elapsed >= 2000) target = 1
       const dt = now - last
       last = now
       display = Math.min(target, display + Math.max(reduced ? 0.08 : 0.0015, (target - display) * 0.006 * dt))
       setValue(display)
       if (display >= 0.995 && !finished) {
         finished = true
-        window.setTimeout(() => setRevealing(true), reduced ? 40 : 500)
+        window.setTimeout(() => setRevealing(true), narrow || reduced ? 80 : 500)
         window.setTimeout(() => {
           document.body.style.overflow = previous
           done.current()
           window.setTimeout(() => ScrollTrigger.refresh(), 100)
-        }, reduced ? 280 : 1500)
+        }, narrow ? 260 : reduced ? 280 : 1500)
         return
       }
       frame = requestAnimationFrame(tick)

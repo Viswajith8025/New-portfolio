@@ -54,7 +54,7 @@ export function Hero() {
     <div id="hero" className="flex w-full flex-col overflow-hidden">
       <section ref={sectionRef} className="relative flex h-auto min-h-[100svh] w-full flex-col overflow-hidden md:h-[100svh] md:min-h-[640px] md:items-center" style={{ touchAction: 'pan-y' }}>
         <div className="relative mx-4 mt-24 h-[50svh] overflow-hidden rounded-[28px] border border-white/10 shadow-glass md:hidden">
-          <img src="/hero/hero-mobile.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
+          <img src="/hero/hero-mobile.webp" alt="" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-top" />
           <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <g fill="none" stroke="#d94a52" strokeOpacity="0.25" strokeWidth="0.7" vectorEffect="non-scaling-stroke">
               <path d="M22 0 L48 62" />
