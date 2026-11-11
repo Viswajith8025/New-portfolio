@@ -1,22 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { profile } from '../../data/site'
 import { useReveal } from '../../hooks/useReveal'
-import { mountHeroShards } from '../../three/heroShards'
 import { VenomButton } from '../VenomButton'
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const copyRef = useRef<HTMLDivElement>(null)
-  const [webgl, setWebgl] = useState<boolean | null>(null)
+  const [webgl] = useState<boolean | null>(() => {
+    const canvas = document.createElement('canvas')
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    const ok = Boolean(gl)
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
+    return ok
+  })
 
   useReveal(sectionRef, '[data-hero-copy] > span, [data-hero-copy] > h1, [data-hero-copy] > div, [data-hero-copy] > p')
-
-  useEffect(() => {
-    const canvas = document.createElement('canvas')
-    const ok = !!(canvas.getContext('webgl2') || canvas.getContext('webgl'))
-    setWebgl(ok)
-  }, [])
 
   useEffect(() => {
     if (!webgl) return
@@ -24,7 +23,16 @@ export function Hero() {
     const host = hostRef.current
     const copy = copyRef.current
     if (!section || !host || !copy) return
-    return mountHeroShards(section, host, copy)
+    let cancel = false
+    let stop = () => {}
+    void import('../../three/heroShards').then(({ mountHeroShards }) => {
+      if (cancel) return
+      stop = mountHeroShards(section, host, copy)
+    })
+    return () => {
+      cancel = true
+      stop()
+    }
   }, [webgl])
 
   return (
@@ -32,7 +40,7 @@ export function Hero() {
       <section ref={sectionRef} className="relative h-[100svh] min-h-[640px] w-full overflow-hidden" style={{ touchAction: 'pan-y' }}>
         {webgl === false && (
           <div className="shadow-glass absolute overflow-hidden rounded-[28px] border border-white/10 max-md:top-[max(8.5%,84px)] max-md:right-[clamp(16px,5%,22px)] max-md:left-[clamp(16px,5%,22px)] max-md:h-1/2 md:inset-x-[5.5%] md:top-[max(8.5%,96px)] md:bottom-[8.5%]">
-            <img src={profile.hero} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '68% center' }} />
+            <img src={profile.hero} alt="" className="absolute inset-0 h-full w-full object-cover object-right" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#050507]/80 via-[#050507]/30 to-transparent" />
           </div>
         )}

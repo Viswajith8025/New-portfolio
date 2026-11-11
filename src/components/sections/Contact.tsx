@@ -36,11 +36,14 @@ export function Contact() {
   return (
     <section id="contact" className="border-t border-white/5 px-5 py-20 md:px-12 md:py-28 lg:px-20">
       <div className="mx-auto max-w-4xl">
-        <p className="flex items-center gap-2 text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase">
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2" fill="#a31515" /></svg>
-          Get In Touch
-        </p>
-        <h2 className="mt-3 text-5xl font-black tracking-tight text-white uppercase md:text-7xl">Contact.</h2>
+        <div className="flex flex-col items-center text-center">
+          <p className="flex items-center gap-2 text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2" fill="#a31515" /></svg>
+            Get In Touch
+          </p>
+          <h2 className="mt-3 text-5xl font-black tracking-tight text-white uppercase md:text-7xl">Contact.</h2>
+          <div className="mt-3 h-1.5 w-20 rounded-full bg-[#a31515]" />
+        </div>
         <a href={profile.whatsapp.url} target="_blank" rel="noreferrer" className="whatsapp-card glass glass-hover mt-10 mb-8 flex items-center gap-4 rounded-3xl px-4 py-5 sm:px-6 md:px-8">
           <span className="whatsapp-icon grid h-12 w-12 place-items-center rounded-2xl">
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
@@ -49,7 +52,7 @@ export function Contact() {
           </span>
           <span>
             <span className="block text-xs font-bold tracking-[0.2em] text-gray-400">WHATSAPP</span>
-            <span className="text-base font-extrabold break-words text-white md:text-xl">{profile.whatsapp.number}</span>
+            <span className="text-sm font-extrabold whitespace-nowrap text-white sm:text-base md:text-xl">{profile.whatsapp.number}</span>
           </span>
           <span className="whatsapp-cta ml-auto text-sm font-bold">Chat now →</span>
         </a>
@@ -59,7 +62,7 @@ export function Contact() {
           <span>{profile.location}</span>
         </div>
         <div className="relative">
-          <div className="red-halo" style={{ inset: '-14% -10%' }} />
+          <div className="red-halo" />
           <form onSubmit={onSubmit} className="glass glass-panel-card relative rounded-3xl p-5 sm:p-8 md:p-14">
             {status === 'sent' ? (
               <div className="flex min-h-64 flex-col items-center justify-center gap-4 text-center">

@@ -85,7 +85,12 @@ function compile(gl: WebGL2RenderingContext, type: number, source: string) {
   return shader
 }
 
-export function mountVenom(canvas: HTMLCanvasElement, label: string) {
+export type VenomHandle = {
+  stop: () => void
+  setLabel: (next: string) => void
+}
+
+export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandle | null {
   const gl = canvas.getContext('webgl2', { premultipliedAlpha: true, alpha: true })
   if (!gl) return null
   const vertex = compile(gl, gl.VERTEX_SHADER, VERT)
@@ -98,6 +103,19 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
   gl.bindAttribLocation(program, 0, 'position')
   gl.linkProgram(program)
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null
+  const uniforms = {
+    uRes: gl.getUniformLocation(program, 'uRes'),
+    uMouse: gl.getUniformLocation(program, 'uMouse'),
+    uPress: gl.getUniformLocation(program, 'uPress'),
+    uTime: gl.getUniformLocation(program, 'uTime'),
+    uStrands: gl.getUniformLocation(program, 'uStrands'),
+    uStrandCount: gl.getUniformLocation(program, 'uStrandCount'),
+    uRipples: gl.getUniformLocation(program, 'uRipples'),
+    uRippleCount: gl.getUniformLocation(program, 'uRippleCount'),
+    uLabel: gl.getUniformLocation(program, 'uLabel'),
+  }
+  const strandData = new Float32Array(24)
+  const rippleData = new Float32Array(18)
 
   const buffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
@@ -111,14 +129,6 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
   labelCanvas.width = 512
   labelCanvas.height = 128
   const ctx = labelCanvas.getContext('2d')
-  if (ctx) {
-    ctx.clearRect(0, 0, 512, 128)
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '700 42px "General Sans", sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(label, 256, 64)
-  }
   const texture = gl.createTexture()
   gl.bindTexture(gl.TEXTURE_2D, texture)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -126,7 +136,18 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, labelCanvas)
+  const paintLabel = (text: string) => {
+    if (!ctx || !texture) return
+    ctx.clearRect(0, 0, 512, 128)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '700 42px "General Sans", sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(text, 256, 64)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, labelCanvas)
+  }
+  paintLabel(label)
 
   const strands: Strand[] = Array.from({ length: 6 }, (_, index) => ({
     angle: (index / 6) * Math.PI * 2,
@@ -146,13 +167,17 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
   let quality = 1
   let frame = 0
   let last = performance.now()
-  const button = canvas.parentElement
+  let lastDraw = 0
+  let pointerDistance = 999
+  let onScreen = true
+  const button = canvas.closest('a, button')
+  const coarse = window.matchMedia('(pointer: coarse)').matches
 
   const resize = () => {
     const bounds = button?.getBoundingClientRect()
-    const width = Math.ceil((bounds?.width ?? 220) + 320)
+    const width = Math.min(Math.ceil((bounds?.width ?? 220) + 320), window.innerWidth)
     const height = Math.ceil((bounds?.height ?? 60) + 320)
-    const ratio = Math.min(window.devicePixelRatio || 1, quality < 1 ? 1 : 1.5)
+    const ratio = Math.min(window.devicePixelRatio || 1, coarse || quality < 1 ? 1 : 1.5)
     canvas.width = Math.round(width * ratio)
     canvas.height = Math.round(height * ratio)
     canvas.style.width = `${width}px`
@@ -173,7 +198,8 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
     if (!bounds) return
     const dx = event.clientX - (bounds.left + bounds.width / 2)
     const dy = event.clientY - (bounds.top + bounds.height / 2)
-    hovering = Math.hypot(dx, dy) < 220
+    pointerDistance = Math.hypot(dx, dy)
+    hovering = pointerDistance < 220
   }
   const onDown = () => {
     pressed = 1
@@ -245,8 +271,12 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
 
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick)
+    if (!onScreen || document.hidden) return
     const dt = Math.min((now - last) / 1000, 0.05)
     last = now
+    const alive = strands.some((strand) => strand.alive) || ripples.length > 0
+    if (pointerDistance > 260 && !alive && now - lastDraw < 50) return
+    lastDraw = now
     if (dt > 1 / 40) quality = Math.max(0.34, quality - dt)
     else quality = Math.min(1, quality + dt * 0.2)
     const steps = Math.max(1, Math.round((dt / (1 / 240)) * quality))
@@ -258,43 +288,55 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
     gl.useProgram(program)
     gl.bindVertexArray(vao)
     const halfW = Math.max(canvas.width * 0.5 - 150, 70)
-    const data = new Float32Array(24)
+    strandData.fill(0)
     strands.forEach((strand, index) => {
       const originX = Math.cos(strand.angle) * (strand.alive ? 1 : 0) * halfW
       const originY = Math.sin(strand.angle) * (strand.alive ? 1 : 0) * 30
-      data[index * 4] = originX
-      data[index * 4 + 1] = originY
-      data[index * 4 + 2] = originX + strand.tipX
-      data[index * 4 + 3] = originY + strand.tipY
+      strandData[index * 4] = originX
+      strandData[index * 4 + 1] = originY
+      strandData[index * 4 + 2] = originX + strand.tipX
+      strandData[index * 4 + 3] = originY + strand.tipY
     })
-    const rippleData = new Float32Array(18)
+    rippleData.fill(0)
     ripples.forEach((ripple, index) => {
       rippleData[index * 3] = ripple.x
       rippleData[index * 3 + 1] = ripple.y
       rippleData[index * 3 + 2] = ripple.age * 180
     })
-    gl.uniform2f(gl.getUniformLocation(program, 'uRes'), canvas.width, canvas.height)
-    gl.uniform2f(gl.getUniformLocation(program, 'uMouse'), pointerX, pointerY)
-    gl.uniform1f(gl.getUniformLocation(program, 'uPress'), pressed)
-    gl.uniform1f(gl.getUniformLocation(program, 'uTime'), now / 1000)
-    gl.uniform4fv(gl.getUniformLocation(program, 'uStrands'), data)
-    gl.uniform1f(gl.getUniformLocation(program, 'uStrandCount'), strands.filter((strand) => strand.alive).length)
-    gl.uniform3fv(gl.getUniformLocation(program, 'uRipples'), rippleData)
-    gl.uniform1f(gl.getUniformLocation(program, 'uRippleCount'), ripples.length)
+    gl.uniform2f(uniforms.uRes, canvas.width, canvas.height)
+    gl.uniform2f(uniforms.uMouse, pointerX, pointerY)
+    gl.uniform1f(uniforms.uPress, pressed)
+    gl.uniform1f(uniforms.uTime, now / 1000)
+    gl.uniform4fv(uniforms.uStrands, strandData)
+    gl.uniform1f(uniforms.uStrandCount, strands.filter((strand) => strand.alive).length)
+    gl.uniform3fv(uniforms.uRipples, rippleData)
+    gl.uniform1f(uniforms.uRippleCount, ripples.length)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, texture)
-    gl.uniform1i(gl.getUniformLocation(program, 'uLabel'), 0)
+    gl.uniform1i(uniforms.uLabel, 0)
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
   }
   frame = requestAnimationFrame(tick)
   const resizeObserver = new ResizeObserver(resize)
-  if (button) resizeObserver.observe(button)
+  const screenObserver = new IntersectionObserver(
+    ([entry]) => {
+      onScreen = entry?.isIntersecting ?? true
+    },
+    { rootMargin: '100px' },
+  )
+  if (button) {
+    resizeObserver.observe(button)
+    screenObserver.observe(button)
+  }
 
-  return () => {
+  return {
+    setLabel: paintLabel,
+    stop: () => {
     cancelAnimationFrame(frame)
     resizeObserver.disconnect()
+    screenObserver.disconnect()
     button?.removeEventListener('pointerdown', onDown)
     window.removeEventListener('pointerup', onUp)
     window.removeEventListener('pointermove', onMove)
@@ -305,5 +347,6 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string) {
     gl.deleteBuffer(buffer)
     gl.deleteTexture(texture)
     gl.deleteVertexArray(vao)
+    },
   }
 }

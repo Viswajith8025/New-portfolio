@@ -18,11 +18,13 @@ export function Services() {
   return (
     <section id="services" ref={ref} className="border-t border-white/5 px-5 py-20 md:px-12 md:py-28 lg:px-20">
       <div className="mx-auto max-w-4xl">
-        <p data-reveal className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-xs">
-          <Mark /> What I Build
-        </p>
-        <h2 data-reveal className="mt-3 text-3xl font-black tracking-tight text-white uppercase md:text-5xl">Services.</h2>
-        <div data-reveal className="mt-2 h-1 w-12 rounded-full bg-[#a31515]" />
+        <div className="flex flex-col items-center text-center">
+          <p data-reveal className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-xs">
+            <Mark /> What I Build
+          </p>
+          <h2 data-reveal className="mt-3 text-3xl font-black tracking-tight text-white uppercase md:text-5xl">Services.</h2>
+          <div data-reveal className="mt-2 h-1 w-12 rounded-full bg-[#a31515]" />
+        </div>
         <ul className="grid-blur mt-10 grid grid-cols-2 gap-3 md:flex md:flex-col md:gap-4">
           {services.map((service, index) => (
             <li key={service.id} data-reveal className="service-item">

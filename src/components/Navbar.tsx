@@ -17,7 +17,7 @@ export function Navbar() {
           <span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]">V</span>
           <span className="transition-colors duration-300 hover:text-red-500">{profile.logoRest}</span>
         </a>
-        <div className="hidden min-w-0 items-center justify-end gap-3 md:flex lg:gap-5 xl:gap-8">
+        <div className="hidden min-w-0 items-center justify-end gap-5 lg:flex lg:gap-8">
           {navLinks.map((link) => (
             <a key={link.href} href={link.href} className="group relative text-[10px] font-bold tracking-[0.12em] whitespace-nowrap text-gray-400 uppercase hover:text-white lg:text-xs xl:text-sm xl:tracking-[0.15em]">
               {link.label}

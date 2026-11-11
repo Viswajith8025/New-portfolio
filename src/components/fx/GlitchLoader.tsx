@@ -12,7 +12,10 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
   const [value, setValue] = useState(0)
   const [revealing, setRevealing] = useState(false)
   const done = useRef(onComplete)
-  done.current = onComplete
+
+  useEffect(() => {
+    done.current = onComplete
+  }, [onComplete])
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -50,7 +53,8 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
       if (document.querySelector('[data-scene-ready]')) scene = 1
       else if (elapsed > 6000) scene = 1
       target = Math.min(1, images * 0.45 + fonts * 0.2 + loaded * 0.15 + scene * 0.2)
-      if (elapsed > 7000 || reduced) target = 1
+      target = Math.min(target, elapsed / 2000)
+      if (elapsed > 7000 || (reduced && elapsed >= 2000)) target = 1
       const dt = now - last
       last = now
       display += Math.max(reduced ? 8 : 0.15, (target - display) * 0.006 * dt)

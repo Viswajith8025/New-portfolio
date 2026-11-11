@@ -3,9 +3,10 @@ import { ArrowUpRight } from 'lucide-react'
 import { profile, projects } from '../../data/site'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { useReveal } from '../../hooks/useReveal'
-import { mountProjectsRail } from '../../three/projectsRail'
 import { Button } from '../ui/button'
 import { ProjectVideoCard } from './ProjectVideoCard'
+
+const featuredProjects = projects.filter((project) => project.featured)
 
 type ProjectsProps = { onSelect: (index: number) => void }
 
@@ -23,12 +24,22 @@ export function Projects({ onSelect }: ProjectsProps) {
     const stage = stageRef.current
     const tooltip = tooltipRef.current
     if (!section || !stage || !tooltip) return
-    const stop = mountProjectsRail(section, stage, tooltip, projects, onSelect)
-    if (!stop) {
-      setFallback(true)
-      return
+    let cancel = false
+    let stop = () => {}
+    void import('../../three/projectsRail').then(({ mountProjectsRail }) => {
+      if (cancel) return
+      const mounted = mountProjectsRail(section, stage, tooltip, featuredProjects, (railIndex) => {
+        const id = featuredProjects[railIndex]?.id
+        const full = projects.findIndex((project) => project.id === id)
+        if (full >= 0) onSelect(full)
+      })
+      if (!mounted) setFallback(true)
+      else stop = mounted
+    })
+    return () => {
+      cancel = true
+      stop()
     }
-    return stop
   }, [onSelect, reduced])
 
   const grid = reduced || fallback

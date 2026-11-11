@@ -10,6 +10,7 @@ export type Project = {
   liveUrl?: string
   repoUrl?: string
   phoneFrame?: boolean
+  featured?: boolean
 }
 
 export type Experience = {
@@ -41,7 +42,7 @@ export const profile = {
   linkedin: 'https://www.linkedin.com/in/viswajithe',
   github: 'https://github.com/Viswajith8025',
   resume: '/resume.pdf',
-  portrait: '/media/portrait.jpg',
+  portrait: '/media/portrait.webp',
   hero: '/hero/hero-bg.jpg',
 }
 
@@ -70,7 +71,7 @@ export const experience: Experience[] = [
   {
     org: 'Emilda & co',
     role: 'Software Engineer (FDE)',
-    dates: '06/2026 – Present · Calicut',
+    dates: '06/2026 · Calicut',
     bullets: [
       'Client requirements, on-site visits, and workflow analysis.',
       'AI automations, agentic workflows, and full-stack ops apps.',
@@ -103,10 +104,11 @@ export const stats = [
 export const projects: Project[] = [
   {
     id: 'report-agent',
+    featured: true,
     title: 'Multi-Business AI Reporting Assistant',
     subtitle: 'WhatsApp BI across two businesses',
     category: 'AI Agents',
-    poster: '/thumbnails/report-agent.jpg',
+    poster: '/thumbnails/report-agent.webp',
     phoneFrame: true,
     description:
       'WhatsApp BI agent spanning parcel logistics and fuel-station data — cron SQL digests with no LLM, plus a LangGraph lane that only calls whitelisted parameterized tools.',
@@ -121,7 +123,7 @@ export const projects: Project[] = [
     title: 'Field Sales & Operations Platform',
     subtitle: 'GPS-gated visits and offline sync',
     category: 'Field Ops',
-    poster: '/thumbnails/opsvisor.jpg',
+    poster: '/thumbnails/opsvisor.webp',
     description:
       'Field-sales stack where visits must start within 50 m of the shop, GPS trails ride the open sale cycle, and offline negotiate/complete share one session id.',
     features: [
@@ -135,7 +137,7 @@ export const projects: Project[] = [
     title: 'Fuel Station Management System',
     subtitle: 'Shift face check and pump sync',
     category: 'Station OS',
-    poster: '/thumbnails/kpnfuel.jpg',
+    poster: '/thumbnails/kpnfuel.webp',
     description:
       'Station OS with on-device face anti-spoof for shift open/close, live BOS pump sync, and a digest-only WhatsApp bridge.',
     features: [
@@ -149,7 +151,7 @@ export const projects: Project[] = [
     title: 'Offline-First Textile Factory Management System',
     subtitle: 'LAN source of truth over Tailscale',
     category: 'Factory Systems',
-    poster: '/thumbnails/factory-app.jpg',
+    poster: '/thumbnails/factory-app.webp',
     description:
       'LAN-only textile factory PWA — phones work offline; the factory PC (SQLite WAL) is the only source of truth over Tailscale.',
     features: [
@@ -163,7 +165,7 @@ export const projects: Project[] = [
     title: 'Resort Attendance & Housekeeping Ops',
     subtitle: 'Face punch and evening digests',
     category: 'Hospitality Ops',
-    poster: '/thumbnails/rozana.jpg',
+    poster: '/thumbnails/rozana.webp',
     description:
       'Multi-property resort ops app where staff punch with AWS Rekognition face match, housekeeping needs photo proof, and owners get Baileys EOD WhatsApp digests.',
     features: [
@@ -177,7 +179,7 @@ export const projects: Project[] = [
     title: 'Lending & Loan Operations Platform',
     subtitle: 'Paise schedules and cash routes',
     category: 'Lending',
-    poster: '/thumbnails/7horses.jpg',
+    poster: '/thumbnails/7horses.webp',
     description:
       'Multi-role lending OS — paise-exact loan schedules, field cash routes with once-only handover, and bilingual EN/Tamil desks.',
     features: [
@@ -191,7 +193,7 @@ export const projects: Project[] = [
     title: 'Corporate Sales Pipeline',
     subtitle: 'MD gates on the kanban',
     category: 'Sales Pipeline',
-    poster: '/thumbnails/sales-pipeline.jpg',
+    poster: '/thumbnails/sales-pipeline.webp',
     description:
       'B2B sales kanban with MD approval gates and renewal periods — illegal stage drags are blocked in the UI and RLS.',
     features: [
@@ -205,7 +207,7 @@ export const projects: Project[] = [
     title: 'IT Services ERP SaaS',
     subtitle: 'Enterprise Business Management Platform',
     category: 'ERP',
-    poster: '/thumbnails/erp.jpg',
+    poster: '/thumbnails/erp.webp',
     description:
       'Agency ERP that syncs eSSL biometric punches over SOAP and keeps writes race-safe with optimistic concurrency — plus GST billing.',
     features: [
@@ -219,7 +221,7 @@ export const projects: Project[] = [
     title: 'Campus Task Accountability',
     subtitle: 'Assignment rules in Postgres',
     category: 'Campus Tools',
-    poster: '/thumbnails/kmct.jpg',
+    poster: '/thumbnails/kmct.webp',
     description:
       'Accountability module for a multi-college group — assignment hierarchy is enforced in Postgres, not just the UI, across campus roles.',
     features: [
@@ -230,10 +232,11 @@ export const projects: Project[] = [
   },
   {
     id: 'vault-er',
+    featured: true,
     title: 'VAULT-ER',
     subtitle: 'Credentials vault with live RLS gates',
     category: 'Security',
-    poster: '/thumbnails/vault-er.jpg',
+    poster: '/thumbnails/vault-er.webp',
     description:
       'PWA credentials vault with per-item TOTP codes, walk-away vault lock, and release gates that live-test RLS isolation between accounts.',
     features: [
@@ -246,10 +249,11 @@ export const projects: Project[] = [
   },
   {
     id: 'viswallet',
+    featured: true,
     title: 'Viswallet',
     subtitle: 'Offline finance in integer paise',
     category: 'Finance',
-    poster: '/thumbnails/viswallet.jpg',
+    poster: '/thumbnails/viswallet.webp',
     description:
       'Offline-first finance PWA — integer paise in Dexie, salary-day cycles, and passphrase-wrapped encrypted backups.',
     features: [
@@ -262,10 +266,11 @@ export const projects: Project[] = [
   },
   {
     id: 'flexora',
+    featured: true,
     title: 'Flexora',
     subtitle: 'One-Day Job Platform',
     category: 'Marketplaces',
-    poster: '/thumbnails/flexora.jpg',
+    poster: '/thumbnails/flexora.webp',
     description:
       'Same-day local staffing marketplace where district-aware job matching meets live Socket.io status and Razorpay checkout before a shift starts.',
     features: [
@@ -278,10 +283,11 @@ export const projects: Project[] = [
   },
   {
     id: 'civic-eye',
+    featured: true,
     title: 'Civic Eye',
     subtitle: 'Citizen Complaint Reporting',
     category: 'Civic Tech',
-    poster: '/thumbnails/civiceye.jpg',
+    poster: '/thumbnails/civiceye.webp',
     description:
       'Civic complaint PWA that clusters nearby reports on a map, AI-summarizes cases for staff, and notifies citizens on status and rewards.',
     features: [
@@ -293,10 +299,11 @@ export const projects: Project[] = [
   },
   {
     id: 'livekeralam',
+    featured: true,
     title: 'LiveKeralam',
     subtitle: 'Discovery Platform',
     category: 'Discovery',
-    poster: '/thumbnails/livekeralam.jpg',
+    poster: '/thumbnails/livekeralam.webp',
     description:
       'Kerala heritage discovery with SoulSync scoring — vibe, district, and season weighted into a personal festival blueprint, then live event chat.',
     features: [
@@ -309,10 +316,11 @@ export const projects: Project[] = [
   },
   {
     id: 'arsenal',
+    featured: true,
     title: 'Arsenal Fitness',
     subtitle: 'Premium Fitness Platform',
     category: 'Brand Sites',
-    poster: '/thumbnails/arsenal.jpg',
+    poster: '/thumbnails/arsenal.webp',
     description:
       'Gym brand site with an on-page AI coach scoped to gym knowledge, and join leads delivered over Telegram.',
     features: [
@@ -325,10 +333,11 @@ export const projects: Project[] = [
   },
   {
     id: 'janani',
+    featured: true,
     title: 'Janani',
     subtitle: 'Wellness Experience',
     category: 'Booking',
-    poster: '/thumbnails/janani.jpg',
+    poster: '/thumbnails/janani.webp',
     description:
       'Wayanad Ayurveda retreat with real booking refs and Razorpay checkout — not a brochure-only site.',
     features: [

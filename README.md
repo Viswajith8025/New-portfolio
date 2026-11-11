@@ -1,32 +1,22 @@
-# React + TypeScript + Vite
+# Viswajith E — portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Single-page portfolio for Viswajith Elayambari. Dark layout, starfield, shattered-glass hero, and a 3D project rail. Content lives in `src/data/site.ts`.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Vite, React 19, TypeScript, Tailwind CSS v4, three.js, GSAP, and Motion for the project modal.
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The contact form posts to `/api/telegram`. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for local delivery. Those values stay out of git.
+
+## Layout notes
+
+The hero photo is `public/hero/hero-bg.jpg`. On screens under 768px the glass shards swap their axes and sample the right side of that plate, where the portrait sits. The 3D project rail shows the eight projects marked `featured` in `src/data/site.ts`. Reduced motion and a missing WebGL context fall back to the full project grid.

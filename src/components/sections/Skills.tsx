@@ -9,9 +9,11 @@ export function Skills() {
   return (
     <section id="skills" ref={ref} className="border-t border-white/5 px-5 py-20 md:px-12 md:py-28 lg:px-20">
       <div className="mx-auto max-w-6xl">
-        <p data-reveal className="text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-base">Arsenal & Expertise</p>
-        <h2 data-reveal className="mt-3 text-5xl font-black tracking-tight text-white uppercase md:text-7xl">Technical Skills.</h2>
-        <div data-reveal className="mt-3 h-1.5 w-20 rounded-full bg-[#a31515]" />
+        <div className="flex flex-col items-center text-center">
+          <p data-reveal className="text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-base">Arsenal & Expertise</p>
+          <h2 data-reveal className="mt-3 text-5xl font-black tracking-tight text-white uppercase md:text-7xl">Technical Skills.</h2>
+          <div data-reveal className="mt-3 h-1.5 w-20 rounded-full bg-[#a31515]" />
+        </div>
         <ul className="grid-blur mt-12 grid grid-cols-2 gap-3 md:gap-7">
           {skills.map((skill) => (
             <li key={skill.name} data-reveal className="glass glass-grid-card flex min-w-0 flex-col gap-4 rounded-3xl p-4 md:flex-row md:items-center md:p-8">

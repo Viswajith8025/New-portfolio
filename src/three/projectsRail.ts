@@ -142,12 +142,13 @@ export function mountProjectsRail(
 ) {
   let renderer: THREE.WebGLRenderer
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
+    renderer = new THREE.WebGLRenderer({ antialias: !window.matchMedia('(pointer: coarse)').matches, alpha: true, powerPreference: 'high-performance' })
   } catch {
     return null
   }
   const coarse = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2))
+  const lowPower = (navigator.hardwareConcurrency || 8) <= 4
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1 : coarse ? 1.25 : 1.5))
   renderer.setClearColor(0x000000, 0)
   renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block'
   stage.appendChild(renderer.domElement)
@@ -195,19 +196,35 @@ export function mountProjectsRail(
     const mesh = new THREE.Mesh(geometry, material)
     mesh.userData.index = index
     scene.add(mesh)
-    const card = { project, mesh, material, hover: 0, texture: null as THREE.Texture | null }
-    loader.load(project.poster, (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace
-      texture.minFilter = THREE.LinearFilter
-      texture.generateMipmaps = false
-      card.texture = texture
-      material.uniforms.map.value = texture
-      const image = texture.image as { width: number; height: number }
-      fitCover(material, image.width, image.height)
-      material.uniforms.uReady.value = 1
-    })
+    const card = { project, mesh, material, hover: 0, texture: null as THREE.Texture | null, loaded: false }
     return card
   })
+
+  const loadTextures = () => {
+    cards.forEach((card) => {
+      if (card.loaded) return
+      card.loaded = true
+      loader.load(card.project.poster, (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace
+        texture.minFilter = THREE.LinearFilter
+        texture.generateMipmaps = false
+        card.texture = texture
+        card.material.uniforms.map.value = texture
+        const image = texture.image as { width: number; height: number }
+        fitCover(card.material, image.width, image.height)
+        card.material.uniforms.uReady.value = 1
+      })
+    })
+  }
+  const textureObserver = new IntersectionObserver(
+    ([entry]) => {
+      if (!entry?.isIntersecting) return
+      loadTextures()
+      textureObserver.disconnect()
+    },
+    { rootMargin: '100% 0px' },
+  )
+  textureObserver.observe(section)
 
   let width = 1
   let height = 1
@@ -309,10 +326,11 @@ export function mountProjectsRail(
   const category = tooltip.querySelector('[data-c]')
 
   const tick = (now: number) => {
+    if (document.hidden) return
     frame = requestAnimationFrame(tick)
     const dt = Math.min((now - last) / 1000, 0.05)
     last = now
-    if (!active || document.hidden) return
+    if (!active) return
     progress += (target - progress) * (1 - Math.exp(-7 * dt))
     if (Math.abs(target - progress) < 1e-5) progress = target
     cards.forEach((card, index) => {
@@ -375,10 +393,22 @@ export function mountProjectsRail(
     renderer.render(scene, camera)
     stage.dataset.sceneReady = '1'
   }
+  const onVisibility = () => {
+    if (document.hidden) {
+      cancelAnimationFrame(frame)
+      return
+    }
+    last = performance.now()
+    cancelAnimationFrame(frame)
+    frame = requestAnimationFrame(tick)
+  }
+  document.addEventListener('visibilitychange', onVisibility)
   frame = requestAnimationFrame(tick)
 
   return () => {
     cancelAnimationFrame(frame)
+    textureObserver.disconnect()
+    document.removeEventListener('visibilitychange', onVisibility)
     stageObserver.disconnect()
     window.removeEventListener('resize', resize)
     window.removeEventListener('scroll', readScroll)

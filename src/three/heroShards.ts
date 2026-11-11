@@ -34,8 +34,6 @@ const POLYGONS: Vec2[][] = [
   [P84, [1, 0], [1, 1], P865, INNER_C],
   [INNER_A, INNER_B, INNER_C, P865, P34],
 ]
-const INNER = [INNER_A, INNER_B, INNER_C]
-
 function panelRect(width: number, height: number) {
   const mobile = width < 768
   const left = mobile ? Math.min(Math.max(width * 0.05, 16), 22) : width * 0.055
@@ -133,11 +131,12 @@ function tintIridescence(shader: { uniforms: Record<string, { value: unknown }>;
 export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTMLElement) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const coarse = window.matchMedia('(pointer: coarse)').matches
+  const lowPower = (navigator.hardwareConcurrency || 8) <= 4
   const reflection = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--glass-reflection').trim() || '#8b1118')
   const highlight = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--glass-highlight').trim() || '#d94a52')
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2))
+  const renderer = new THREE.WebGLRenderer({ antialias: !coarse, alpha: true })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1 : coarse ? 1.25 : 1.5))
   renderer.setClearColor(0x000000, 0)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -191,6 +190,12 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     envMapIntensity: 0.28,
   })
   const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.2 })
+  const materials = POLYGONS.map(() => {
+    const material = base.clone()
+    material.onBeforeCompile = (shader) => tintIridescence(shader, reflection)
+    material.customProgramCacheKey = () => 'muted-red-iridescence'
+    return material
+  })
 
   let shards: Shard[] = []
   let panelW = 1
@@ -203,7 +208,6 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
       group.remove(shard.mesh)
       shard.mesh.geometry.dispose()
       shard.edge.geometry.dispose()
-      shard.material.dispose()
     })
     shards = []
   }
@@ -211,16 +215,10 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   const rebuild = (keep?: Shard[]) => {
     const previous = keep ?? shards
     disposeShards()
-    const time = reduced ? 0 : performance.now() / 1000
     POLYGONS.forEach((polygon, index) => {
       const mapped = polygon.map((point) => {
         let x = point[0]
         let y = point[1]
-        const inner = INNER.indexOf(point)
-        if (inner >= 0) {
-          x += Math.sin(time * 0.5 + inner * 2.1) * 0.006
-          y += Math.cos(time * 0.4 + inner * 1.3) * 0.006
-        }
         if (mobile) [x, y] = [y, x]
         return [(x - 0.5) * panelW, (0.5 - y) * panelH] as Vec2
       })
@@ -243,16 +241,25 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
       let fitY = 1
       if (panelAspect > aspect) fitY = aspect / panelAspect
       else fitX = panelAspect / aspect
-      const bias = mobile ? 0.12 : 0.06
       for (let i = 0; i < position.count; i++) {
-        const u = (position.getX(i) / panelW + 0.5) * fitX + (1 - fitX) / 2 + bias * (1 - fitX)
-        const v = (position.getY(i) / panelH + 0.5) * fitY + (1 - fitY) / 2
-        uv.setXY(i, Math.min(1, Math.max(0, u)), v)
+        const nx = position.getX(i) / panelW + 0.5
+        const ny = position.getY(i) / panelH + 0.5
+        let u: number
+        let v: number
+        if (mobile) {
+          // After the x/y swap, screen X is texture U. The portrait sits in the
+          // right half of the plate, so sample that band or the face falls off.
+          const uStart = 0.6
+          u = uStart + nx * (1 - uStart)
+          v = ny * fitY + (1 - fitY) / 2
+        } else {
+          u = nx * fitX + (1 - fitX) / 2 + 0.06 * (1 - fitX)
+          v = ny * fitY + (1 - fitY) / 2
+        }
+        uv.setXY(i, Math.min(1, Math.max(0, u)), Math.min(1, Math.max(0, v)))
       }
       uv.needsUpdate = true
-      const material = base.clone()
-      material.onBeforeCompile = (shader) => tintIridescence(shader, reflection)
-      material.customProgramCacheKey = () => 'muted-red-iridescence'
+      const material = materials[index]
       const mesh = new THREE.Mesh(geometry, material)
       const edge = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 25), lineMaterial)
       mesh.add(edge)
@@ -278,6 +285,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     })
   }
 
+  let resizeTimer = 0
   const layout = () => {
     const width = root.clientWidth
     const height = root.clientHeight
@@ -288,9 +296,12 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     panelW = rect.width * worldPerPixel
     panelH = rect.height * worldPerPixel
     group.position.set(0, -((rect.top - (height - rect.top - rect.height)) / 2) * worldPerPixel, 0)
+    const switched = mobile !== rect.mobile
     mobile = rect.mobile
     camera.updateProjectionMatrix()
-    rebuild(shards)
+    window.clearTimeout(resizeTimer)
+    if (shards.length === 0 || switched) rebuild(shards)
+    else resizeTimer = window.setTimeout(() => rebuild(shards), 150)
     if (rect.mobile) {
       const copyTop = rect.top + rect.height + Math.min(height * 0.02, 16)
       Object.assign(copy.style, {
@@ -326,8 +337,8 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   let hover = -1
   const tilt = { x: 0, y: 0 }
   let scroll = 0
-  let rebuildAt = 0
   let visible = true
+  let pageHidden = document.hidden
   let frame = 0
   let last = performance.now()
 
@@ -405,7 +416,18 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   root.addEventListener('lostpointercapture', endDrag)
   window.addEventListener('blur', endDrag)
 
+  const onVisibility = () => {
+    pageHidden = document.hidden
+    if (!pageHidden) {
+      last = performance.now()
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(tick)
+    }
+  }
+  window.addEventListener('visibilitychange', onVisibility)
+
   const tick = (now: number) => {
+    if (pageHidden) return
     frame = requestAnimationFrame(tick)
     if (!visible) {
       last = now
@@ -434,12 +456,6 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
       }
     }
     point.intensity += ((hover >= 0 || dragIndex >= 0 ? 1.4 : 0) - point.intensity) * ease(6)
-    rebuildAt += dt
-    const moving = shards.some((shard) => shard.x.position !== 0 || shard.y.position !== 0)
-    if (!reduced && dragIndex < 0 && !moving && rebuildAt > 0.25 && explode < 0.02) {
-      rebuildAt = 0
-      rebuild(shards)
-    }
     const seconds = now / 1000
     shards.forEach((shard, index) => {
       const held = dragIndex === index || shard.x.position !== 0 || shard.y.position !== 0
@@ -472,6 +488,8 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
 
   return () => {
     cancelAnimationFrame(frame)
+    window.clearTimeout(resizeTimer)
+    window.removeEventListener('visibilitychange', onVisibility)
     resizeObserver.disconnect()
     visibility.disconnect()
     endDrag()
@@ -483,6 +501,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     root.removeEventListener('lostpointercapture', endDrag)
     window.removeEventListener('blur', endDrag)
     disposeShards()
+    materials.forEach((material) => material.dispose())
     base.dispose()
     lineMaterial.dispose()
     texture.dispose()
