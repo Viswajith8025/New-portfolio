@@ -1,0 +1,49 @@
+---
+description: Rules for rebuilding the "red cinematic glass" portfolio (1:1 design clone of abisheakportfolio.vercel.app) with Viswajith's own content
+globs: ["src/**/*.{ts,tsx,css}"]
+alwaysApply: true
+---
+
+# Goal
+Pixel- and behavior-faithful rebuild of the reference site's DESIGN and INTERACTIONS, filled with Viswajith Elayambari's OWN content.
+Reference screenshots: `reference/screens/*.png`. Reference CSS: `reference/styles-DtbApaj6.css`. Reference logic (minified→pretty, read-only): `reference/extracted/*.js`.
+
+# Stack (do not change)
+- Vite + React 19 + TypeScript (strict). Single page, no router.
+- Tailwind CSS v4 via `@tailwindcss/vite` (CSS-first `@theme`, NO tailwind.config.js). Tokens live in `src/styles/tokens.css`.
+- three@0.186 (raw three.js, NOT react-three-fiber) for: starfield background, hero shattered-glass, projects 3D rail.
+- gsap@3.15 + ScrollTrigger for: section reveal hook, stats counter timeline.
+- motion (framer-motion) ONLY for the project modal (AnimatePresence + motion.div).
+- lucide-react icons (arrow-up-right, chevron-left, chevron-right, code-xml, external-link, x).
+- shadcn-style Button (cva + tailwind-merge + clsx + @radix-ui/react-slot) for the reduced-motion project grid fallback.
+- NO Lenis, NO smooth-scroll library (original uses native scroll + `html{scroll-behavior:smooth}`). NO theme toggle (dark only). NO hamburger menu.
+- NO Flutter. NO extra UI kits (Aceternity/Magic UI/React Bits) unless asked.
+
+# Design tokens (must match exactly)
+- Backgrounds: body #08080c, app root #07070a, starfield canvas #050507.
+- Reds: eyebrow/underline #a31515; hero eyebrow #ff2a3b; hover title #ff334b; primary button fill #d81e2f (hover #ea2638); glow #ff1e38 / #ff1238; favicon #e50914.
+- Text: white for headings, gray-300 body, gray-400/500 labels (Tailwind default grays).
+- Fonts: "General Sans" 300/400/500/600 from Fontshare (`https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600&display=swap`); "Geist" 700 (Google Fonts) only for the loader counter.
+- ALL headings render at weight 600 (global `h1..h6{font-weight:600!important}`) even when classes say font-black. Paragraphs/li forced 400.
+- Eyebrow pattern: `text-[#a31515] font-bold uppercase text-sm md:text-base tracking-[0.2em]`.
+- Section title pattern: `text-5xl md:text-7xl font-black tracking-tight uppercase text-white` + bar `w-20 h-1.5 bg-[#a31515] mt-3 rounded-full`. Titles end with a period ("PROJECTS.").
+- Radii: cards rounded-3xl (24px), nav rounded-2xl, chips/buttons rounded-full, hero panel 28px, project cards shader radius 0.07.
+- Glass classes: `.glass`, `.glass-hover`, `.glass-grid-card`, `.glass-panel-card`, `.glass-chip`, `.glass-red`, `.glass-chip-red`, `.glass-input`, `.glass-bar`, `.red-halo`, `.grid-blur` — use them, don't reinvent.
+- Hover transitions: .45s ease for glass, .35s cubic-bezier(.2,.8,.2,1) translate for grid cards (lift -5px), panels lift -3px.
+- Breakpoints: Tailwind defaults (sm 640, md 768, lg 1024, xl 1280). Hero switches layout at max-width 767px.
+
+# Motion rules
+- Section reveal = `useReveal(ref, selector)`: GSAP set {opacity:0,y:20,filter:'blur(12px)'}; IntersectionObserver(rootMargin '-4% 0px -4% 0px'); in: duration .8, delay min((index%5)*.055,.22), ease power3.out; out: duration .65 (re-hides when leaving!).
+- Every rAF loop: clamp dt to 0.05s, use exponential smoothing `1-Math.exp(-k*dt)`, pause when offscreen (IntersectionObserver) or `document.hidden`.
+- Respect `prefers-reduced-motion` everywhere (original disables reveals, sparks, shards motion, swaps projects rail for a grid).
+- Touch / `(pointer: coarse)`: no spark cursor, no hover tilt, DPR capped at 1.5, fewer particles (900 vs 2200).
+
+# Content rules
+- Never ship Abisheak's name, photos, videos, phone, Drive links or prices. Use `src/data/site.ts` (Viswajith's data).
+- Viswajith: React, TypeScript, Python/FastAPI, Supabase, LangGraph AI agents. Portfolio: https://viswajith-ten.vercel.app. No Flutter anywhere.
+- Don't invent stats/clients; leave `TODO:` placeholders where numbers are unknown.
+
+# Code style
+- One component per file in `src/components/sections/*` or `src/components/fx/*`; heavy three.js logic in `src/three/*` as plain TS classes/functions with `mount(el) => dispose()`.
+- Always dispose geometries/materials/textures/renderers and remove listeners in cleanup.
+- Verify every step with the Playwright MCP: screenshot at 1440x900 and 390x844 and compare with `reference/screens`.

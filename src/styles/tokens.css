@@ -1,0 +1,98 @@
+/* Design tokens and glass classes. Import after Tailwind. */
+
+@theme {
+  --color-spider-dark: #08080c;     /* body bg */
+  --color-page: #07070a;            /* app root bg + theme-color */
+  --color-void: #050507;            /* starfield canvas bg, hero gradient */
+  --color-blood: #a31515;           /* eyebrow text, underline bars, stat bars, selection */
+  --color-blood-bright: #ff2a3b;    /* hero eyebrow + "/" */
+  --color-accent: #ff334b;          /* hover titles, focus ring on inputs */
+  --color-netflix: #e50914;         /* favicon, ambient orb, scrollbar thumb hover */
+  --color-venom: #ff1238;           /* button focus ring, glow */
+  --color-btn-red: #d81e2f;         /* .glass-red / .glass-chip-red */
+  --color-btn-red-hover: #ea2638;
+  --color-whatsapp: #25d366;
+  --font-sans: "General Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "General Sans", system-ui, sans-serif;
+  --font-display: "Geist", "General Sans", sans-serif; /* loader counter only, 700 */
+  --radius: 0.625rem;
+  --shadow-glass: 0 8px 32px 0 #00000073;
+  --ease-out-expo: cubic-bezier(.2,.8,.2,1);   /* glass hover translate */
+}
+
+:root {
+  color-scheme: dark;
+  --glass-reflection: #8b1118;   /* read by hero three.js (point light + iridescence tint) */
+  --glass-highlight: #d94a52;    /* hero specular + edge lines */
+  --glass-hover-warmth: oklch(43% .13 22 / .16);
+  --glass-hover-border: oklch(63% .16 22 / .38);
+  --glass-hover-shadow: inset 0 1px 0 oklch(100% 0 0/.2), 0 18px 45px -22px oklch(0% 0 0/.7), 0 18px 55px -30px oklch(43% .13 22/.35);
+  --glass-liquid-surface: radial-gradient(120% 80% at 0% 0%, oklch(100% 0 0/.09), transparent 45%), radial-gradient(90% 60% at 50% 125%, oklch(43% .13 22/.12), transparent 70%), oklch(18% .014 340/.32);
+  --loader-bg: #000;
+  --loader-fg: oklch(96% 0 0);
+  --loader-red: oklch(63% .25 27);
+  --loader-cyan: oklch(85% .14 200);
+}
+@property --glass-warmth { syntax: "<color>"; inherits: false; initial-value: transparent; }
+
+html { overflow-x: clip; scroll-behavior: smooth; }
+body { background: var(--color-spider-dark); color: #f3f4f6; font-family: var(--font-sans); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+h1,h2,h3,h4,h5,h6 { font-weight: 600 !important; }  /* NOTE: overrides font-black on all headings */
+p,li { font-weight: 400 !important; }
+::selection { background: #a31515; color: #fff; }
+::-webkit-scrollbar { width: 8px }
+::-webkit-scrollbar-track { background: #09090d }
+::-webkit-scrollbar-thumb { background: #2a1115; border-radius: 4px }
+::-webkit-scrollbar-thumb:hover { background: #e50914 }
+
+/* film grain overlay */
+body::after { content:""; position:fixed; inset:0; z-index:70; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* ambient orbs */
+.ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.ambient>i{position:absolute;border-radius:9999px;will-change:transform}
+.ambient .o1{width:60vw;height:60vw;top:-6vh;left:-18vw;background:radial-gradient(circle,#ff123857 0%,#ff123800 68%);animation:orb-a 28s ease-in-out infinite}
+.ambient .o3{width:52vw;height:52vw;bottom:-22vh;left:22vw;background:radial-gradient(circle,#e5091442 0%,#e5091400 68%);animation:orb-c 31s ease-in-out infinite}
+@keyframes orb-a{0%,to{transform:translate(0)}50%{transform:translate(14vw,18vh)}}
+@keyframes orb-c{0%,to{transform:translate(0)}50%{transform:translate(12vw,-16vh)}}
+
+@layer components {
+  .glass{position:relative;backdrop-filter:blur(28px) saturate(130%);background:linear-gradient(160deg,#ffffff0d 0%,#fff0 38%),#09080ae0;border:1px solid #ffffff17;
+    box-shadow:inset 0 1px #ffffff12,0 10px 30px -14px #000c,0 18px 60px -30px #ff1e3838;transition:border-color .3s,box-shadow .3s,background .3s,transform .3s}
+  .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;padding:1px;
+    background:linear-gradient(#ffffff38 0%,#ffffff0d 22%,#fff0 55%,#ffffff0a 100%);
+    mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+  .glass-strong{backdrop-filter:blur(22px) saturate(110%);background:linear-gradient(#ffffff09 0%,#fff0 24%),#070709f2;border:1px solid #46464c99;
+    box-shadow:inset 0 1px #ffffff1f,0 2px 4px #0009,0 28px 60px -20px #000000e6,0 30px 110px -40px #ff1e3859}
+  .glass-hover:hover{background:radial-gradient(110% 100% at 50% 115%,#ff243c6b 0%,#c80e2224 50%,#0000 80%),linear-gradient(160deg,#ffffff0d 0%,#fff0 38%),#0b090be6;
+    border-color:#ff465a73;box-shadow:inset 0 1px #ffffff1f,0 14px 32px -14px #000000d9,0 22px 80px -20px #ff1e3880}
+  .glass.glass-grid-card{isolation:isolate;background:linear-gradient(160deg,#ffffff0d 0%,#fff0 38%),#09080a99;translate:0;
+    transition:translate .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s}
+  .glass.glass-grid-card::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(90% 70% at 50% 120%,#ff1e3833 0%,#c80e2212 45%,#0000 75%);transition:opacity .35s}
+  .glass.glass-grid-card:hover{border-color:#ff465a73;translate:0 -5px;box-shadow:inset 0 1px #ffffff1f,0 18px 36px -14px #000000d9,0 22px 80px -18px #ff1e388c}
+  .glass.glass-grid-card:hover::after{background:radial-gradient(110% 100% at 50% 115%,#ff243c80 0%,#c80e222e 50%,#0000 80%)}
+  .glass.glass-panel-card{background:radial-gradient(90% 60% at 50% 125%,#ff1e3833 0%,#c80e2212 45%,#0000 75%),linear-gradient(160deg,#ffffff0d 0%,#fff0 38%),#09080ae0}
+  .glass.glass-panel-card:hover{transform:translateY(-3px);border-color:#ff6e7d52;
+    background:radial-gradient(120% 80% at 0 0,#ffffff21 0%,#fff0 45%),radial-gradient(100% 70% at 50% 125%,#ff243c38 0%,#0000 75%),#1610145c;
+    box-shadow:inset 0 1px #ffffff42,inset 0 -1px #ff3c502e,0 18px 50px -18px #000000bf,0 20px 70px -30px #ff1e3873}
+  .glass-chip{background:#101012eb;border:1px solid #46464c8c;transition:border-color .3s,background-color .3s,color .3s}
+  .glass-chip:hover{background:#18181bf5;border-color:#ff415880;box-shadow:inset 0 1px #ffffff1a}
+  .glass-red{position:relative;background:#d81e2f;border:1px solid #ff788740;box-shadow:0 8px 22px -10px #ff123880;transition:background .3s,border-color .3s,box-shadow .3s}
+  .glass-red:hover{background:#ea2638;border-color:#ff96a566;box-shadow:0 10px 26px -8px #ff123899}
+  .glass-chip-red{background:#d81e2f;border:1px solid #ff788740}
+  .glass-input{background:#050507e6;border:1px solid #3e3e4499;box-shadow:inset 0 2px 6px #0000008c}
+  .glass-input:focus{background:#131315;border-color:#ff334bb3;box-shadow:0 0 0 3px #ff1e3824}
+  .glass-bar{position:relative;isolation:isolate;backdrop-filter:blur(18px) saturate(110%);background:#08080aeb;border-top:1px solid #3e3e448c}
+  .red-halo{position:absolute;inset:-8% -4%;z-index:0;pointer-events:none;filter:blur(40px);border-radius:9999px;
+    background:radial-gradient(60% 55%,#ff183833 0%,#e5091414 45%,#0000 75%)}
+  .grid-blur{position:relative;isolation:isolate}
+  .grid-blur::before{content:"";position:absolute;inset:-2.25rem;z-index:-1;pointer-events:none;border-radius:2.5rem;background:#0606081f;
+    backdrop-filter:blur(26px) saturate(125%);
+    mask:linear-gradient(90deg,#0000 0,#000 2.25rem calc(100% - 2.25rem),#0000 100%),linear-gradient(#0000 0,#000 2.25rem calc(100% - 2.25rem),#0000 100%);mask-composite:intersect}
+  @media (width<=768px){ .glass{backdrop-filter:blur(10px) saturate(140%)} }
+  @media (width<=640px){ .grid-blur::before{inset:-1.25rem;backdrop-filter:blur(18px)} }
+}
+/* The full original CSS (stat-panel/stat-rim, hang-frame, glitch-loader, whatsapp-card, pf-ripple, spark-cursor, cursors)
+   is in ../source/custom-extracted.css and ../source/assets/styles-DtbApaj6.css — port those blocks per section. */
