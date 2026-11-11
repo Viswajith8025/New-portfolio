@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 
 type Vec2 = [number, number]
 type Spring = { position: number; velocity: number }
@@ -146,9 +145,11 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
 
   const scene = new THREE.Scene()
   const pmrem = new THREE.PMREMGenerator(renderer)
-  const env = pmrem.fromScene(new RoomEnvironment(), 0.04)
+  const envScene = new THREE.Scene()
+  envScene.add(new THREE.HemisphereLight(0xff2a3b, 0x4a0a12, 4))
+  const env = pmrem.fromScene(envScene, 0.04)
   scene.environment = env.texture
-  scene.environmentIntensity = 0.22
+  scene.environmentIntensity = 0.55
 
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100)
   camera.position.set(0, 0, 10)
@@ -181,9 +182,9 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     specularColor: highlight,
     clearcoat: 0.7,
     clearcoatRoughness: 0.12,
-    iridescence: 0.55,
-    iridescenceIOR: 1.6,
-    iridescenceThicknessRange: [100, 400],
+    iridescence: 0.35,
+    iridescenceIOR: 1.5,
+    iridescenceThicknessRange: [380, 620],
     emissive: 0xffffff,
     emissiveMap: texture,
     emissiveIntensity: 0.92,
@@ -253,10 +254,10 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
           u = uStart + nx * (1 - uStart)
           v = ny * fitY + (1 - fitY) / 2
         } else {
-          // The graded plate keeps the face near 78% of the width. Hold that
+          // The studio plate keeps the face near 69% of the width. Hold that
           // point in the right side of the panel so a tall 768px frame still
           // contains the whole face.
-          const u0 = Math.min(Math.max(0.78 - 0.72 * fitX, 0), 1 - fitX)
+          const u0 = Math.min(Math.max(0.69 - 0.72 * fitX, 0), 1 - fitX)
           u = u0 + nx * fitX
           v = ny * fitY + (1 - fitY) / 2
         }
@@ -478,7 +479,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
         shard.spin.y * explode + shard.lift * 0.06 * pointer.x + shard.x.position * 0.06,
         shard.spin.z * explode + shard.x.position * 0.025,
       )
-      shard.material.iridescence = 0.55
+      shard.material.iridescence = 0.35
       shard.material.emissiveIntensity = (ready ? 0.92 : 0) * (1 - explode * 0.5) + shard.lift * 0.08
     })
     copy.style.transform = `perspective(1400px) rotateX(${(-tilt.x * 180) / Math.PI}deg) rotateY(${(tilt.y * 180) / Math.PI}deg) translate3d(${-explode * 140}px, ${-explode * 60}px, ${explode * 80}px)`
