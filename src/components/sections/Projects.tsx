@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { profile, projects } from '../../data/site'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { useReveal } from '../../hooks/useReveal'
 import { Button } from '../ui/button'
@@ -15,11 +16,12 @@ export function Projects({ onSelect }: ProjectsProps) {
   const stageRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const reduced = usePrefersReducedMotion()
+  const narrow = useMediaQuery('(max-width: 767px)')
   const [fallback, setFallback] = useState(false)
   useReveal(sectionRef, '[data-project-heading] > *, [data-project-fallback]')
 
   useEffect(() => {
-    if (reduced) return
+    if (reduced || narrow) return
     const section = sectionRef.current
     const stage = stageRef.current
     const tooltip = tooltipRef.current
@@ -40,9 +42,9 @@ export function Projects({ onSelect }: ProjectsProps) {
       cancel = true
       stop()
     }
-  }, [onSelect, reduced])
+  }, [narrow, onSelect, reduced])
 
-  const grid = reduced || fallback
+  const grid = reduced || fallback || narrow
 
   return (
     <section id="projects" ref={sectionRef} className={`relative border-t border-white/5 ${grid ? 'px-5 py-28 md:px-12 lg:px-20' : 'h-[420vh]'}`}>

@@ -19,4 +19,4 @@ The contact form posts to `/api/telegram`. Set `TELEGRAM_BOT_TOKEN` and `TELEGRA
 
 ## Layout notes
 
-The hero photo is `public/hero/hero-bg.jpg`. On screens under 768px the glass shards swap their axes and sample the right side of that plate, where the portrait sits. The 3D project rail shows the eight projects marked `featured` in `src/data/site.ts`. Reduced motion and a missing WebGL context fall back to the full project grid.
+The hero photo is `public/hero/hero-bg.jpg`. On screens under 768px the hero is type only; the glass and photo stay on desktop. The 3D project rail shows the eight projects marked `featured` in `src/data/site.ts` from 768px up. Phones, reduced motion, and a missing WebGL context use the full project grid.

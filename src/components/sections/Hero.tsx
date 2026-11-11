@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { profile } from '../../data/site'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReveal } from '../../hooks/useReveal'
 import { VenomButton } from '../VenomButton'
 
@@ -7,6 +8,7 @@ export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const copyRef = useRef<HTMLDivElement>(null)
+  const narrow = useMediaQuery('(max-width: 767px)')
   const [webgl] = useState<boolean | null>(() => {
     const canvas = document.createElement('canvas')
     const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
@@ -18,10 +20,22 @@ export function Hero() {
   useReveal(sectionRef, '[data-hero-copy] > span, [data-hero-copy] > h1, [data-hero-copy] > div, [data-hero-copy] > p')
 
   useEffect(() => {
-    if (!webgl) return
+    const copy = copyRef.current
+    const clearCopy = () => {
+      if (!copy) return
+      copy.style.left = ''
+      copy.style.top = ''
+      copy.style.width = ''
+      copy.style.height = ''
+      copy.style.transform = ''
+      copy.style.opacity = ''
+    }
+    if (!webgl || narrow) {
+      clearCopy()
+      return
+    }
     const section = sectionRef.current
     const host = hostRef.current
-    const copy = copyRef.current
     if (!section || !host || !copy) return
     let cancel = false
     let stop = () => {}
@@ -32,26 +46,27 @@ export function Hero() {
     return () => {
       cancel = true
       stop()
+      clearCopy()
     }
-  }, [webgl])
+  }, [narrow, webgl])
 
   return (
     <div id="hero" className="flex w-full flex-col overflow-hidden">
-      <section ref={sectionRef} className="relative h-[100svh] min-h-[640px] w-full overflow-hidden" style={{ touchAction: 'pan-y' }}>
+      <section ref={sectionRef} className="relative flex h-[100svh] min-h-[640px] w-full items-center overflow-hidden" style={{ touchAction: 'pan-y' }}>
         {webgl === false && (
-          <div className="shadow-glass absolute overflow-hidden rounded-[28px] border border-white/10 max-md:top-[max(8.5%,84px)] max-md:right-[clamp(16px,5%,22px)] max-md:left-[clamp(16px,5%,22px)] max-md:h-1/2 md:inset-x-[5.5%] md:top-[max(8.5%,96px)] md:bottom-[8.5%]">
+          <div className="shadow-glass absolute inset-x-[5.5%] top-[max(8.5%,96px)] bottom-[8.5%] hidden overflow-hidden rounded-[28px] border border-white/10 md:block">
             <img src={profile.hero} alt="" className="absolute inset-0 h-full w-full object-cover object-right" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#050507]/80 via-[#050507]/30 to-transparent" />
           </div>
         )}
-        <div ref={hostRef} className="absolute inset-0 touch-pan-y" aria-hidden="true" />
+        <div ref={hostRef} className="absolute inset-0 hidden touch-pan-y md:block" aria-hidden="true" />
         <div
           ref={copyRef}
           data-hero={profile.hero}
-          className="pointer-events-none absolute flex items-center will-change-transform max-md:items-end [&_a]:pointer-events-auto [&_button]:pointer-events-auto"
-          style={webgl === false ? undefined : { transformOrigin: '50% 50%', inset: '0' }}
+          className="pointer-events-none relative flex w-full items-center will-change-transform [&_a]:pointer-events-auto [&_button]:pointer-events-auto md:absolute"
+          style={webgl === false || narrow ? undefined : { transformOrigin: '50% 50%', inset: '0' }}
         >
-          <div className="w-full max-w-full pr-4 pl-4 max-md:rounded-3xl max-md:bg-gradient-to-t max-md:from-[#050507]/90 max-md:via-[#050507]/55 max-md:to-transparent max-md:pt-4 max-md:pb-2 md:max-w-[min(26rem,48%)] md:pr-4 md:pl-[6%] lg:max-w-[min(40rem,52%)] xl:max-w-[min(44rem,56%)]">
+          <div className="w-full max-w-full px-4 pt-20 md:max-w-[min(26rem,48%)] md:pt-0 md:pr-4 md:pl-[6%] lg:max-w-[min(40rem,52%)] xl:max-w-[min(44rem,56%)]">
             <div data-hero-copy className="flex flex-col gap-2 sm:gap-3.5">
               <span className="text-[11px] font-bold tracking-[0.18em] text-[#ff2a3b] uppercase sm:text-xs sm:tracking-[0.25em] md:text-sm">{profile.eyebrow}</span>
               <h1 className="text-[clamp(1.85rem,5.6vw,6.75rem)] leading-[0.88] font-black tracking-tight whitespace-nowrap text-white uppercase drop-shadow-md">
