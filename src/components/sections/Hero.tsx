@@ -52,7 +52,19 @@ export function Hero() {
 
   return (
     <div id="hero" className="flex w-full flex-col overflow-hidden">
-      <section ref={sectionRef} className="relative flex h-[100svh] min-h-[640px] w-full items-center overflow-hidden" style={{ touchAction: 'pan-y' }}>
+      <section ref={sectionRef} className="relative flex h-auto min-h-[100svh] w-full flex-col overflow-hidden md:h-[100svh] md:min-h-[640px] md:items-center" style={{ touchAction: 'pan-y' }}>
+        <div className="relative mx-4 mt-24 h-[50svh] overflow-hidden rounded-[28px] border border-white/10 shadow-glass md:hidden">
+          <img src="/hero/hero-mobile.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
+          <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <g fill="none" stroke="#d94a52" strokeOpacity="0.25" strokeWidth="0.7" vectorEffect="non-scaling-stroke">
+              <path d="M22 0 L48 62" />
+              <path d="M51.5 0 L71.6 49" />
+              <path d="M84 0 L71.6 49" />
+              <path d="M48 62 L38.5 72 L34 100" />
+              <path d="M71.6 49 L86.5 100" />
+            </g>
+          </svg>
+        </div>
         {webgl === false && (
           <div className="shadow-glass absolute inset-x-[5.5%] top-[max(8.5%,96px)] bottom-[8.5%] hidden overflow-hidden rounded-[28px] border border-white/10 md:block">
             <img src={profile.hero} alt="" className="absolute inset-0 h-full w-full object-cover object-right" />
@@ -66,10 +78,10 @@ export function Hero() {
           className="pointer-events-none relative flex w-full items-center will-change-transform [&_a]:pointer-events-auto [&_button]:pointer-events-auto md:absolute"
           style={webgl === false || narrow ? undefined : { transformOrigin: '50% 50%', inset: '0' }}
         >
-          <div className="w-full max-w-full px-4 pt-20 md:max-w-[min(26rem,48%)] md:pt-0 md:pr-4 md:pl-[6%] lg:max-w-[min(40rem,52%)] xl:max-w-[min(44rem,56%)]">
+          <div className="w-full max-w-full px-4 pt-6 pb-8 md:max-w-[min(26rem,48%)] md:pt-0 md:pb-0 md:pr-4 md:pl-[6%] lg:max-w-[min(40rem,52%)] xl:max-w-[min(44rem,56%)]">
             <div data-hero-copy className="flex flex-col gap-2 sm:gap-3.5">
               <span className="text-[11px] font-bold tracking-[0.18em] text-[#ff2a3b] uppercase sm:text-xs sm:tracking-[0.25em] md:text-sm">{profile.eyebrow}</span>
-              <h1 className="text-[clamp(1.85rem,5.6vw,6.75rem)] leading-[0.88] font-black tracking-tight whitespace-nowrap text-white uppercase drop-shadow-md">
+              <h1 className="text-4xl leading-[0.88] font-black tracking-tight whitespace-nowrap text-white uppercase drop-shadow-md sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
                 {profile.short}
               </h1>
               <div className="mt-0.5 flex items-center gap-2 text-sm font-extrabold tracking-wider text-white uppercase sm:gap-3 sm:text-base md:text-lg lg:text-xl">

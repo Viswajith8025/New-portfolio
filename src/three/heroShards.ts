@@ -35,7 +35,7 @@ const POLYGONS: Vec2[][] = [
   [INNER_A, INNER_B, INNER_C, P865, P34],
 ]
 function panelRect(width: number, height: number) {
-  const mobile = width < 768
+  const mobile = window.matchMedia('(max-width: 767px)').matches
   const left = mobile ? Math.min(Math.max(width * 0.05, 16), 22) : width * 0.055
   const top = Math.max(height * 0.085, mobile ? 84 : 96)
   const panelHeight = mobile ? height * 0.5 : height - top - height * 0.085
@@ -253,7 +253,11 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
           u = uStart + nx * (1 - uStart)
           v = ny * fitY + (1 - fitY) / 2
         } else {
-          u = nx * fitX + (1 - fitX) / 2 + 0.06 * (1 - fitX)
+          // The graded plate keeps the face near 78% of the width. Hold that
+          // point in the right side of the panel so a tall 768px frame still
+          // contains the whole face.
+          const u0 = Math.min(Math.max(0.78 - 0.72 * fitX, 0), 1 - fitX)
+          u = u0 + nx * fitX
           v = ny * fitY + (1 - fitY) / 2
         }
         uv.setXY(i, Math.min(1, Math.max(0, u)), Math.min(1, Math.max(0, v)))

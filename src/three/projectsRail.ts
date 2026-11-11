@@ -142,7 +142,7 @@ export function mountProjectsRail(
 ) {
   let renderer: THREE.WebGLRenderer
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: !window.matchMedia('(pointer: coarse)').matches, alpha: true, powerPreference: 'high-performance' })
+    renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' })
   } catch {
     return null
   }

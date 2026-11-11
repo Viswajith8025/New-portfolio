@@ -22,7 +22,7 @@ export default function App() {
   const finish = useCallback(() => setLoading(false), [])
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col overflow-x-hidden bg-[#07070a] font-sans text-gray-100 selection:bg-[#a31515] selection:text-white">
+    <div className="relative isolate flex min-h-screen flex-col bg-[#07070a] font-sans text-gray-100 selection:bg-[#a31515] selection:text-white [overflow-x:clip]">
       <Starfield />
       <AmbientOrbs />
       <SparkCursor />
@@ -40,9 +40,11 @@ export default function App() {
       <div className="relative z-10">
         <Footer />
       </div>
-      <Suspense fallback={null}>
-        <ProjectModal index={active} onClose={close} onIndex={setActive} />
-      </Suspense>
+      {active !== null && (
+        <Suspense fallback={null}>
+          <ProjectModal index={active} onClose={close} onIndex={setActive} />
+        </Suspense>
+      )}
     </div>
   )
 }

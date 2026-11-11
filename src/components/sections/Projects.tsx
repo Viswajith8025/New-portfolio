@@ -78,17 +78,27 @@ export function Projects({ onSelect }: ProjectsProps) {
           ))}
         </ul>
         {grid && (
-          <div data-project-fallback className="mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project, index) => (
-              <Button key={project.id} variant="ghost" className="glass glass-panel-card h-auto flex-col items-stretch overflow-hidden rounded-2xl p-0 text-left whitespace-normal" onClick={() => onSelect(index)}>
-                <ProjectVideoCard project={project} />
-                <div className="space-y-2 p-5">
-                  <p className="text-[10px] font-bold tracking-[0.2em] text-red-400 uppercase">{project.category}</p>
-                  <h3 className="text-xl font-black text-white">{project.title}</h3>
-                  <p className="text-sm text-gray-400">{project.subtitle}</p>
-                </div>
-              </Button>
-            ))}
+          <div data-project-fallback>
+            <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+              {featuredProjects.map((project) => {
+                const index = projects.findIndex((item) => item.id === project.id)
+                return (
+                  <Button key={project.id} variant="ghost" className="glass glass-panel-card h-auto flex-col items-stretch overflow-hidden rounded-2xl p-0 text-left whitespace-normal" onClick={() => onSelect(index)}>
+                    <ProjectVideoCard project={project} />
+                    <div className="space-y-2 p-3 sm:p-5">
+                      <p className="text-[10px] font-bold tracking-[0.2em] text-red-400 uppercase">{project.category}</p>
+                      <h3 className="text-base font-black text-white sm:text-xl">{project.title}</h3>
+                      <p className="text-xs text-gray-400 sm:text-sm">{project.subtitle}</p>
+                    </div>
+                  </Button>
+                )
+              })}
+            </div>
+            <div className="mt-8 flex justify-center">
+              <button type="button" onClick={() => onSelect(0)} className="glass glass-hover inline-flex items-center rounded-full px-6 py-3 text-sm font-bold text-gray-200 hover:-translate-y-0.5 hover:text-white">
+                View all projects
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -41,7 +41,10 @@ export function VenomButton({ children, href, type = 'button', className, disabl
   }, [disabled, plain])
 
   const classNames = cn(
-    'glass-red relative inline-flex items-center justify-center overflow-visible rounded-full px-8 text-xs font-bold tracking-wider text-white uppercase md:text-sm',
+    'relative inline-flex items-center justify-center rounded-full px-8 text-xs font-bold tracking-wider text-white uppercase md:text-sm',
+    plain
+      ? 'border border-white/10 bg-[#0b0b0e] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_0_0_1px_#ff1e3855,0_0_24px_-6px_#ff1e38aa]'
+      : 'glass-red overflow-visible',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF1238]',
     className,
   )

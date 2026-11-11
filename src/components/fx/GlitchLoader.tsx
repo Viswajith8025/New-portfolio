@@ -57,8 +57,7 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
       if (elapsed > 7000 || (reduced && elapsed >= 2000)) target = 1
       const dt = now - last
       last = now
-      display += Math.max(reduced ? 8 : 0.15, (target - display) * 0.006 * dt)
-      if (display > 1) display = 1
+      display = Math.min(target, display + Math.max(reduced ? 0.08 : 0.0015, (target - display) * 0.006 * dt))
       setValue(display)
       if (display >= 0.995 && !finished) {
         finished = true
