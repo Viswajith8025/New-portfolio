@@ -14,7 +14,7 @@ export function ProjectModal({ index, onClose, onIndex }: ProjectModalProps) {
   const trigger = useRef<HTMLElement | null>(null)
   const project: Project | undefined = index === null ? undefined : projects[index]
   const [posterFrame, setPosterFrame] = useState<{ src: string; portrait: boolean } | null>(null)
-  const portraitPoster = posterFrame?.src === project?.poster && posterFrame.portrait
+  const portraitPoster = posterFrame !== null && posterFrame.src === project?.poster && posterFrame.portrait
 
   useEffect(() => {
     if (index === null) return
