@@ -30,7 +30,7 @@ export function Services() {
                 <span className="glass-chip flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-gray-200 tabular-nums md:h-11 md:w-11 md:text-sm">
                   {String(index + 1).padStart(2, '0')}
                 </span>
-                <span className="text-sm font-bold text-white group-hover:text-[#ff334b] md:text-xl">{service.title}</span>
+                <span className="min-w-0 text-sm leading-tight font-bold break-words text-white group-hover:text-[#ff334b] md:text-xl">{service.title}</span>
                 <span className="mt-auto flex items-center gap-3 md:mt-0 md:ml-auto">
                   <span className="hidden text-right md:block">
                     <span className="block text-[10px] tracking-widest text-gray-500 uppercase">{service.priceLabel}</span>

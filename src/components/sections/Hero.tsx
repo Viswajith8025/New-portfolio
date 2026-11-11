@@ -43,19 +43,19 @@ export function Hero() {
           className="pointer-events-none absolute flex items-center will-change-transform max-md:items-end [&_a]:pointer-events-auto [&_button]:pointer-events-auto"
           style={webgl === false ? undefined : { transformOrigin: '50% 50%', inset: '0' }}
         >
-          <div className="max-w-[min(44rem,92%)] pr-6 pl-[6%] max-md:w-full max-md:max-w-full max-md:rounded-3xl max-md:bg-gradient-to-t max-md:from-[#050507]/90 max-md:via-[#050507]/55 max-md:to-transparent max-md:pt-4 max-md:pr-3 max-md:pb-1 max-md:pl-3">
+          <div className="w-full max-w-full pr-4 pl-4 max-md:rounded-3xl max-md:bg-gradient-to-t max-md:from-[#050507]/90 max-md:via-[#050507]/55 max-md:to-transparent max-md:pt-4 max-md:pb-2 md:max-w-[min(26rem,48%)] md:pr-4 md:pl-[6%] lg:max-w-[min(40rem,52%)] xl:max-w-[min(44rem,56%)]">
             <div data-hero-copy className="flex flex-col gap-2 sm:gap-3.5">
-              <span className="text-[11px] font-bold tracking-[0.25em] text-[#ff2a3b] uppercase sm:text-xs md:text-sm">{profile.eyebrow}</span>
-              <h1 className="text-4xl leading-[0.88] font-black tracking-tight whitespace-nowrap text-white uppercase drop-shadow-md sm:text-6xl md:text-7xl lg:text-8xl">
+              <span className="text-[11px] font-bold tracking-[0.18em] text-[#ff2a3b] uppercase sm:text-xs sm:tracking-[0.25em] md:text-sm">{profile.eyebrow}</span>
+              <h1 className="text-[clamp(1.85rem,5.6vw,6.75rem)] leading-[0.88] font-black tracking-tight whitespace-nowrap text-white uppercase drop-shadow-md">
                 {profile.short}
               </h1>
               <div className="mt-0.5 flex items-center gap-2 text-sm font-extrabold tracking-wider text-white uppercase sm:gap-3 sm:text-base md:text-lg lg:text-xl">
                 <span>Full Stack Developer</span>
               </div>
-              <p className="mt-1 text-xs font-normal tracking-wide text-gray-300 sm:text-sm md:text-base lg:text-lg">{profile.tagline}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-6 sm:gap-4">
-                <VenomButton href="#projects">EXPLORE MY WORK</VenomButton>
-                <a href="#contact" className="glass glass-hover inline-flex items-center justify-center rounded-full px-5 py-3 text-xs font-bold tracking-wider text-gray-200 uppercase transition-all duration-300 hover:-translate-y-0.5 hover:text-white sm:px-7 sm:py-3.5 sm:text-sm">
+              <p className="mt-1 max-w-prose text-xs font-normal tracking-wide text-gray-300 sm:text-sm md:text-base lg:text-lg">{profile.tagline}</p>
+              <div className="mt-3 flex flex-col items-stretch gap-3 sm:mt-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                <VenomButton href="#projects" className="w-full sm:w-auto">EXPLORE MY WORK</VenomButton>
+                <a href="#contact" className="glass glass-hover inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-xs font-bold tracking-wider text-gray-200 uppercase transition-all duration-300 hover:-translate-y-0.5 hover:text-white sm:w-auto sm:px-7 sm:py-3.5 sm:text-sm">
                   Get In Touch
                 </a>
               </div>

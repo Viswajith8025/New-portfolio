@@ -211,6 +211,7 @@ export function mountProjectsRail(
 
   let width = 1
   let height = 1
+  let cardFit = 1
   let layout = gridLayout(cards.length, 1, 1)
   const resize = () => {
     width = stage.clientWidth
@@ -219,6 +220,11 @@ export function mountProjectsRail(
     camera.aspect = width / Math.max(height, 1)
     camera.updateProjectionMatrix()
     layout = gridLayout(cards.length, width, height)
+    const viewHeight = 2 * CAM_Z * Math.tan(((FOV / 2) * Math.PI) / 180)
+    const viewWidth = viewHeight * camera.aspect
+    const closestZ = coarse ? 2.5 : 3.2
+    const magnification = CAM_Z / (CAM_Z - closestZ)
+    cardFit = Math.min(1, (viewWidth * 0.86) / (CARD_W * magnification))
   }
   resize()
 
@@ -321,7 +327,7 @@ export function mountProjectsRail(
       basis.makeBasis(xAxis, up, side)
       railQuat.setFromRotationMatrix(basis)
       const cell = layout.cells[index]
-      const cardScale = CARD_W / ASPECT
+      const cardScale = (CARD_W * cardFit) / ASPECT
       if (state.fly <= 0) {
         card.mesh.position.copy(position)
         card.mesh.quaternion.copy(railQuat)

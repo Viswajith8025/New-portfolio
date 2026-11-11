@@ -31,7 +31,7 @@ export function VenomButton({ children, href, type = 'button', className, disabl
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF1238]',
     className,
   )
-  const style = { minWidth: width, height: 60 }
+  const style = { minWidth: `min(100%, ${width}px)`, maxWidth: '100%', height: 56 }
   const label = <span className="relative z-10 px-2">{children}</span>
   const canvas = webgl ? (
     <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2" />

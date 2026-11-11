@@ -14,7 +14,7 @@ export function Skills() {
         <div data-reveal className="mt-3 h-1.5 w-20 rounded-full bg-[#a31515]" />
         <ul className="grid-blur mt-12 grid grid-cols-2 gap-3 md:gap-7">
           {skills.map((skill) => (
-            <li key={skill.name} data-reveal className="glass glass-grid-card flex flex-col gap-4 rounded-3xl p-4 md:flex-row md:items-center md:p-8">
+            <li key={skill.name} data-reveal className="glass glass-grid-card flex min-w-0 flex-col gap-4 rounded-3xl p-4 md:flex-row md:items-center md:p-8">
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-bold text-white hover:text-[#a31515] md:text-2xl">{skill.name}</h3>
                 <p className="mt-1 text-[10px] tracking-[0.16em] text-gray-500 uppercase md:text-sm">{skill.category}</p>

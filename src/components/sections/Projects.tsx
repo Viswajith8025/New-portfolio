@@ -39,7 +39,7 @@ export function Projects({ onSelect }: ProjectsProps) {
         <div ref={stageRef} className={grid ? '' : 'absolute inset-0 z-10'} data-no-ripple>
           <div data-project-heading className={grid ? 'mx-auto mb-14 max-w-7xl text-center' : 'pointer-events-none absolute top-24 right-0 left-0 z-20 px-5 text-center'}>
             <p className="text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-base">Featured Works</p>
-            <h2 className="mt-3 text-5xl font-black tracking-tight text-white uppercase md:text-7xl">Projects.</h2>
+            <h2 className="mt-3 text-[clamp(2.6rem,10vw,4.5rem)] font-black tracking-tight text-white uppercase md:text-7xl">Projects.</h2>
             <div className="mx-auto mt-3 h-1.5 w-20 rounded-full bg-[#a31515]" />
             <a href={profile.github} target="_blank" rel="noreferrer" className="glass glass-hover pointer-events-auto mt-6 inline-flex items-center gap-3 rounded-full px-6 py-3 text-sm font-bold text-gray-200 hover:-translate-y-0.5 hover:text-white md:text-base">
               <ArrowUpRight className="text-[#a31515]" size={18} />
