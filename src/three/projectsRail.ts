@@ -147,8 +147,7 @@ export function mountProjectsRail(
     return null
   }
   const coarse = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
-  const lowPower = (navigator.hardwareConcurrency || 8) <= 4
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1 : coarse ? 1.25 : 1.5))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
   renderer.setClearColor(0x000000, 0)
   renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block'
   stage.appendChild(renderer.domElement)
@@ -255,9 +254,11 @@ export function mountProjectsRail(
   readScroll()
 
   let active = true
+  let kick = () => {}
   const stageObserver = new IntersectionObserver(
     ([entry]) => {
       active = entry?.isIntersecting ?? true
+      kick()
     },
     { rootMargin: '250px' },
   )
@@ -326,7 +327,7 @@ export function mountProjectsRail(
   const category = tooltip.querySelector('[data-c]')
 
   const tick = (now: number) => {
-    if (document.hidden) return
+    if (document.hidden || !active) return
     frame = requestAnimationFrame(tick)
     const dt = Math.min((now - last) / 1000, 0.05)
     last = now
@@ -393,17 +394,17 @@ export function mountProjectsRail(
     renderer.render(scene, camera)
     stage.dataset.sceneReady = '1'
   }
-  const onVisibility = () => {
-    if (document.hidden) {
-      cancelAnimationFrame(frame)
-      return
-    }
-    last = performance.now()
+  kick = () => {
     cancelAnimationFrame(frame)
+    if (!active || document.hidden) return
+    last = performance.now()
     frame = requestAnimationFrame(tick)
   }
+  const onVisibility = () => {
+    kick()
+  }
   document.addEventListener('visibilitychange', onVisibility)
-  frame = requestAnimationFrame(tick)
+  kick()
 
   return () => {
     cancelAnimationFrame(frame)
