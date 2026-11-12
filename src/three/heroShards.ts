@@ -114,6 +114,45 @@ function clampDrag(value: number, size: number) {
   return Math.max(-limit, Math.min(limit, value))
 }
 
+const crownHeights: { value: number }[] = []
+
+function shadeGlass(
+  shader: { uniforms: Record<string, { value: unknown }>; fragmentShader: string; vertexShader: string },
+  color: THREE.Color,
+  panelHeight: number,
+) {
+  tintIridescence(shader, color)
+  const height = { value: panelHeight }
+  crownHeights.push(height)
+  shader.uniforms.uPanelH = height
+  shader.vertexShader = `varying float vCrown;\n${shader.vertexShader}`.replace(
+    '#include <begin_vertex>',
+    `#include <begin_vertex>
+    vCrown = transformed.y;`,
+  )
+  shader.fragmentShader = `varying float vCrown;\nuniform float uPanelH;\n${shader.fragmentShader}`
+    .replace(
+      '#include <emissivemap_fragment>',
+      `#include <emissivemap_fragment>
+    {
+      float front = pow(clamp(normal.z, 0.0, 1.0), 0.45);
+      totalEmissiveRadiance *= mix(0.08, 1.0, front);
+      float grazing = pow(1.0 - clamp(normal.z, 0.0, 1.0), 1.6);
+      totalEmissiveRadiance += vec3(0.42, 0.04, 0.07) * grazing;
+    }`,
+    )
+    .replace(
+      '#include <opaque_fragment>',
+      `{
+      float height01 = clamp(vCrown / max(uPanelH, 0.001) + 0.5, 0.0, 1.0);
+      float facing = pow(clamp(dot(normalize(normal), vec3(0.0, 0.42, 0.91)), 0.0, 1.0), 1.35);
+      float frost = smoothstep(0.38, 0.9, height01) * facing;
+      outgoingLight += vec3(1.0, 0.8, 0.84) * frost * 0.85;
+    }
+    #include <opaque_fragment>`,
+    )
+}
+
 function tintIridescence(shader: { uniforms: Record<string, { value: unknown }>; fragmentShader: string }, color: THREE.Color) {
   shader.uniforms.redReflection = { value: color }
   shader.fragmentShader = `uniform vec3 redReflection;\n${shader.fragmentShader}`
@@ -158,6 +197,9 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   const key = new THREE.DirectionalLight(0xffe8e8, 0.7)
   key.position.set(-4, 5, 6)
   scene.add(key)
+  const crown = new THREE.DirectionalLight(0xffd0d8, 1.15)
+  crown.position.set(0, 8, 3)
+  scene.add(crown)
   const rim = new THREE.DirectionalLight(highlight, 0.45)
   rim.position.set(5, -3, 2)
   scene.add(rim)
@@ -179,21 +221,21 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     metalness: 0,
     specularIntensity: 0.35,
     specularColor: highlight,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.12,
-    iridescence: 0.35,
+    clearcoat: 1,
+    clearcoatRoughness: 0.08,
+    iridescence: 0,
     iridescenceIOR: 1.5,
-    iridescenceThicknessRange: [380, 620],
+    iridescenceThicknessRange: [100, 180],
     emissive: 0xffffff,
     emissiveMap: texture,
     emissiveIntensity: 0.92,
     envMapIntensity: 0.28,
   })
-  const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.55 })
+  const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.72 })
   const materials = POLYGONS.map(() => {
     const material = base.clone()
-    material.onBeforeCompile = (shader) => tintIridescence(shader, reflection)
-    material.customProgramCacheKey = () => 'muted-red-iridescence'
+    material.onBeforeCompile = (shader) => shadeGlass(shader, reflection, panelH)
+    material.customProgramCacheKey = () => 'red-glass-crown'
     return material
   })
 
@@ -222,14 +264,14 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
         if (mobile) [x, y] = [y, x]
         return [(x - 0.5) * panelW, (0.5 - y) * panelH] as Vec2
       })
-      const shape = roundedShape(insetPolygon(mapped, Math.min(panelW, panelH) * 0.012), Math.min(panelW, panelH) * 0.035)
-      const depth = Math.min(panelW, panelH) * 0.08
+      const shape = roundedShape(insetPolygon(mapped, Math.min(panelW, panelH) * 0.03), Math.min(panelW, panelH) * 0.05)
+      const depth = Math.min(panelW, panelH) * 0.15
       const geometry = new THREE.ExtrudeGeometry(shape, {
         depth,
         bevelEnabled: true,
-        bevelThickness: depth * 0.55,
-        bevelSize: depth * 0.45,
-        bevelSegments: 3,
+        bevelThickness: depth * 0.7,
+        bevelSize: depth * 0.62,
+        bevelSegments: 4,
         curveSegments: 8,
       })
       geometry.translate(0, 0, -depth)
@@ -299,6 +341,9 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     const worldPerPixel = (2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / height
     panelW = rect.width * worldPerPixel
     panelH = rect.height * worldPerPixel
+    crownHeights.forEach((uniform) => {
+      uniform.value = panelH
+    })
     group.position.set(0, -((rect.top - (height - rect.top - rect.height)) / 2) * worldPerPixel, 0)
     const switched = mobile !== rect.mobile
     mobile = rect.mobile

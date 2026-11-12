@@ -54,18 +54,19 @@ const FRAG = `
       float radius = mix(7.0, 1.4, smoothstep(0.0, 160.0, length(strand.zw - strand.xy)));
       field = min(field, sdCapsule(pixel, strand.xy, strand.zw, radius));
     }
-    float edge = smoothstep(1.5, -1.2, field);
-    if (edge < 0.01) discard;
-    vec2 light = normalize(vec2(-0.45, -0.8));
-    vec2 shade = normalize(pixel / max(halfSize, vec2(1.0)));
-    float dome = clamp(0.55 + 0.45 * dot(shade, light), 0.0, 1.0);
-    vec3 col = mix(vec3(0.01, 0.005, 0.008), vec3(0.08, 0.02, 0.03), dome);
+    float cover = field <= 0.0 ? 1.0 : smoothstep(2.0, 0.0, field);
+    if (cover < 0.01) discard;
+    float ny = clamp(pixel.y / max(halfSize.y, 1.0), -1.0, 1.0);
+    float nx = clamp(pixel.x / max(halfSize.x, 1.0), -1.0, 1.0);
+    float dome = smoothstep(-0.95, 0.55, ny);
+    vec3 col = mix(vec3(0.012, 0.01, 0.014), vec3(0.07, 0.065, 0.075), dome);
+    float band = smoothstep(-0.25, 0.35, ny) * (1.0 - smoothstep(0.72, 1.05, ny));
+    float across = 1.0 - smoothstep(0.05, 0.95, abs(nx));
+    col += vec3(0.78, 0.8, 0.84) * band * mix(0.45, 1.0, across) * 0.72;
     float rim = smoothstep(2.5, 0.0, abs(field));
     col += vec3(1.0, 0.07, 0.22) * rim * 0.9;
     float outside = smoothstep(0.0, 1.0, field);
-    col += vec3(1.0, 0.15, 0.25) * exp(-field * 0.12) * 0.35 * outside;
-    float spec = pow(clamp(dot(shade, normalize(vec2(-0.25, 0.97))), 0.0, 1.0), 36.0);
-    col += vec3(0.95, 0.96, 0.98) * spec * 0.38 * (1.0 - rim);
+    col += vec3(1.0, 0.15, 0.25) * exp(-max(field, 0.0) * 0.12) * 0.35 * outside;
     for (int i = 0; i < 6; i++) {
       if (float(i) >= uRippleCount) break;
       vec3 ripple = uRipples[i];
@@ -74,7 +75,7 @@ const FRAG = `
     }
     col += vec3(1.0, 0.08, 0.16) * uPress * 0.18;
     col += texture2D(uLabel, vec2(0.5)).rgb * 0.0;
-    gl_FragColor = vec4(col, edge);
+    gl_FragColor = vec4(col, cover);
   }
 `
 
