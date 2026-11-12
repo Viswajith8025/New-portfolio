@@ -25,31 +25,33 @@ export function About() {
                   <span key={item} className="tech-pill glass-chip rounded-full px-3.5 py-1.5 text-xs font-bold md:px-5 md:py-2.5 md:text-lg">{item}</span>
                 ))}
               </div>
-              <div className="mt-8 space-y-4">
-                {experience.map((item) => (
-                  <div key={item.org}>
-                    <p className="text-[10px] font-bold tracking-[0.3em] text-gray-500 uppercase">{item.org}</p>
-                    <p className="mt-1 font-black text-white">{item.role}</p>
-                    <p className="text-xs font-bold text-[#ff334b]">{item.dates}</p>
-                    <ul className="mt-2 space-y-1 text-sm text-gray-300">
-                      {item.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                {education.map((item) => (
-                  <div key={item.title}>
-                    <p className="font-black text-white">{item.title}</p>
-                    <p className="mt-1 text-[10px] font-bold tracking-widest text-[#ff334b] uppercase">{item.meta}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
         <div data-reveal className="lg:col-span-5">
           <HangingFrame />
+        </div>
+      </div>
+      <div data-reveal className="mx-auto mt-12 max-w-7xl">
+        <div className="space-y-4">
+          {experience.map((item) => (
+            <div key={item.org}>
+              <p className="text-[10px] font-bold tracking-[0.3em] text-gray-500 uppercase">{item.org}</p>
+              <p className="mt-1 font-black text-white">{item.role}</p>
+              <p className="text-xs font-bold text-[#ff334b]">{item.dates}</p>
+              <ul className="mt-2 space-y-1 text-sm text-gray-300">
+                {item.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {education.map((item) => (
+            <div key={item.title}>
+              <p className="font-black text-white">{item.title}</p>
+              <p className="mt-1 text-[10px] font-bold tracking-widest text-[#ff334b] uppercase">{item.meta}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
