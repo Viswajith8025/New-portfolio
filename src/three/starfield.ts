@@ -83,8 +83,7 @@ export function mountStarfield(host: HTMLElement) {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const coarse = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
-  const lowPower = coarse || (navigator.hardwareConcurrency || 8) <= 4
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1)
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
   renderer.setPixelRatio(pixelRatio)
   renderer.setClearColor(0x000000, 0)
   renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block'
@@ -94,7 +93,7 @@ export function mountStarfield(host: HTMLElement) {
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200)
   camera.position.set(0, 0, 6)
 
-  const count = lowPower ? 450 : 2200
+  const count = coarse ? 900 : 2200
   const positions = new Float32Array(count * 3)
   const sizes = new Float32Array(count)
   const seeds = new Float32Array(count)
