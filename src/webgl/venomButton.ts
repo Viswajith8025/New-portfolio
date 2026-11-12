@@ -32,6 +32,7 @@ const FRAG = `
   uniform vec3 uRipples[6];
   uniform float uRippleCount;
   uniform sampler2D uLabel;
+  uniform vec2 uHalf;
   float sdPill(vec2 p, vec2 halfSize, float radius) {
     vec2 q = abs(p) - halfSize + radius;
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
@@ -44,8 +45,8 @@ const FRAG = `
   }
   void main() {
     vec2 pixel = (vUv * uRes) - uRes * 0.5;
-    vec2 halfSize = vec2(max(uRes.x * 0.5 - 150.0, 70.0), 30.0);
-    float body = sdPill(pixel, halfSize, 30.0);
+    vec2 halfSize = uHalf;
+    float body = sdPill(pixel, halfSize, halfSize.y);
     float field = body;
     for (int i = 0; i < 6; i++) {
       if (float(i) >= uStrandCount) break;
@@ -113,6 +114,7 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
     uRipples: gl.getUniformLocation(program, 'uRipples'),
     uRippleCount: gl.getUniformLocation(program, 'uRippleCount'),
     uLabel: gl.getUniformLocation(program, 'uLabel'),
+    uHalf: gl.getUniformLocation(program, 'uHalf'),
   }
   const strandData = new Float32Array(24)
   const rippleData = new Float32Array(18)
@@ -171,12 +173,16 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
   let pointerDistance = 999
   let onScreen = true
   const button = canvas.closest('a, button')
+  let half = { x: 120, y: 30 }
 
   const resize = () => {
     const bounds = button?.getBoundingClientRect()
-    const width = Math.min(Math.ceil((bounds?.width ?? 220) + 320), window.innerWidth)
-    const height = Math.ceil((bounds?.height ?? 60) + 320)
+    const cssW = bounds?.width ?? 220
+    const cssH = bounds?.height ?? 60
+    const width = Math.min(Math.ceil(cssW + 320), window.innerWidth)
+    const height = Math.ceil(cssH + 320)
     const ratio = Math.min(window.devicePixelRatio || 1, 1.5)
+    half = { x: (cssW * 0.5 + 8) * ratio, y: (cssH * 0.5) * ratio }
     canvas.width = Math.round(width * ratio)
     canvas.height = Math.round(height * ratio)
     canvas.style.width = `${width}px`
@@ -308,6 +314,7 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
       rippleData[index * 3 + 2] = ripple.age * 180
     })
     gl.uniform2f(uniforms.uRes, canvas.width, canvas.height)
+    gl.uniform2f(uniforms.uHalf, half.x, half.y)
     gl.uniform2f(uniforms.uMouse, pointerX, pointerY)
     gl.uniform1f(uniforms.uPress, pressed)
     gl.uniform1f(uniforms.uTime, now / 1000)
