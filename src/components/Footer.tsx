@@ -10,7 +10,7 @@ export function Footer() {
   return (
     <footer ref={ref} className="glass-bar px-5 py-12 md:px-16">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 text-center md:flex-row md:justify-between md:text-left">
-        <a href="#hero" className="text-xl font-black tracking-tight whitespace-nowrap uppercase sm:text-2xl">
+        <a href="#hero" className="text-2xl font-black tracking-tight whitespace-nowrap uppercase">
           <span className="text-red-600">V</span>{profile.logoRest}
         </a>
         <p className="max-w-xs text-xs font-bold tracking-widest text-gray-500 uppercase">© {year} Viswajith E. Full-Stack & AI Developer.</p>

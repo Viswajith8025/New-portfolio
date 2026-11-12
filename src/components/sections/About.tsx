@@ -11,7 +11,7 @@ export function About() {
       <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <p data-reveal className="text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-base">{about.eyebrow}</p>
-          <h2 data-reveal className="mt-3 text-[clamp(2.4rem,11vw,6rem)] font-black tracking-tight break-words text-white uppercase">{about.title}</h2>
+          <h2 data-reveal className="mt-3 text-5xl leading-none font-black tracking-tight break-words text-white uppercase md:text-7xl">{about.title}</h2>
           <div data-reveal className="mt-3 h-1.5 w-24 rounded-full bg-[#a31515]" />
           <div className="relative mt-8">
             <div className="red-halo" />
