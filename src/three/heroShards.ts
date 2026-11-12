@@ -16,6 +16,10 @@ type Shard = {
   y: Spring
   targetX: number
   targetY: number
+  crackMesh: Int8Array
+  crackEdge: Int8Array
+  meshXY: Float32Array
+  edgeXY: Float32Array
 }
 
 const P22: Vec2 = [0.22, 0]
@@ -109,31 +113,48 @@ function stepSpring(state: Spring, target: number, dt: number) {
   }
 }
 
-function clampToPanel(geometry: THREE.ExtrudeGeometry, panelW: number, panelH: number, radius: number) {
-  const position = geometry.attributes.position
-  const halfW = panelW / 2
-  const halfH = panelH / 2
-  const curve = Math.min(radius, halfW, halfH)
-  const limitX = halfW - curve
-  const limitY = halfH - curve
+const INNER_POINTS = [INNER_A, INNER_B, INNER_C]
+
+function mapPoint(point: Vec2, panelW: number, panelH: number, mobile: boolean): Vec2 {
+  let x = point[0]
+  let y = point[1]
+  if (mobile) [x, y] = [y, x]
+  return [(x - 0.5) * panelW, (0.5 - y) * panelH]
+}
+
+function tagCrackVertices(position: THREE.BufferAttribute, corners: Vec2[], reach: number) {
+  const tags = new Int8Array(position.count)
+  const base = new Float32Array(position.count * 2)
+  tags.fill(-1)
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i)
     const y = position.getY(i)
-    let ax = Math.min(Math.abs(x), halfW)
-    let ay = Math.min(Math.abs(y), halfH)
-    if (ax > limitX && ay > limitY) {
-      const dx = ax - limitX
-      const dy = ay - limitY
-      const length = Math.hypot(dx, dy)
-      if (length > curve) {
-        ax = limitX + (dx / length) * curve
-        ay = limitY + (dy / length) * curve
+    base[i * 2] = x
+    base[i * 2 + 1] = y
+    let nearest = -1
+    let best = reach
+    corners.forEach((corner, index) => {
+      const distance = Math.hypot(x - corner[0], y - corner[1])
+      if (distance < best) {
+        best = distance
+        nearest = index
       }
-    }
-    position.setXY(i, Math.sign(x) * ax, Math.sign(y) * ay)
+    })
+    tags[i] = nearest
   }
-  position.needsUpdate = true
-  geometry.computeVertexNormals()
+  return { tags, base }
+}
+
+function shiftCracks(position: THREE.BufferAttribute, tags: Int8Array, base: Float32Array, offsets: Vec2[]) {
+  let moved = false
+  for (let i = 0; i < tags.length; i++) {
+    const crack = tags[i]
+    if (crack < 0) continue
+    const offset = offsets[crack]
+    position.setXY(i, base[i * 2] + offset[0], base[i * 2 + 1] + offset[1])
+    moved = true
+  }
+  if (moved) position.needsUpdate = true
 }
 
 function clampDrag(value: number, size: number) {
@@ -141,55 +162,25 @@ function clampDrag(value: number, size: number) {
   return Math.max(-limit, Math.min(limit, value))
 }
 
-const crownHeights: { value: number }[] = []
-
-function shadeGlass(
-  shader: { uniforms: Record<string, { value: unknown }>; fragmentShader: string; vertexShader: string },
-  color: THREE.Color,
-  panelHeight: number,
-) {
-  tintIridescence(shader, color)
-  const height = { value: panelHeight }
-  crownHeights.push(height)
-  shader.uniforms.uPanelH = height
-  shader.vertexShader = `varying float vCrown;\n${shader.vertexShader}`.replace(
-    '#include <begin_vertex>',
-    `#include <begin_vertex>
-    vCrown = transformed.y;`,
-  )
-  shader.fragmentShader = `varying float vCrown;\nuniform float uPanelH;\n${shader.fragmentShader}`
-    .replace(
-      '#include <emissivemap_fragment>',
-      `#include <emissivemap_fragment>
-    {
-      float front = pow(clamp(normal.z, 0.0, 1.0), 0.45);
-      totalEmissiveRadiance *= mix(0.08, 1.0, front);
-      float grazing = pow(1.0 - clamp(normal.z, 0.0, 1.0), 1.6);
-      totalEmissiveRadiance += vec3(0.42, 0.04, 0.07) * grazing;
-    }`,
-    )
-    .replace(
-      '#include <opaque_fragment>',
-      `{
-      float height01 = clamp(vCrown / max(uPanelH, 0.001) + 0.5, 0.0, 1.0);
-      float facing = pow(clamp(dot(normalize(normal), vec3(0.0, 0.42, 0.91)), 0.0, 1.0), 1.35);
-      float frost = smoothstep(0.78, 0.98, height01) * facing;
-      outgoingLight += vec3(1.0, 0.34, 0.4) * frost * 0.16;
-    }
-    #include <opaque_fragment>`,
-    )
-}
-
 function tintIridescence(shader: { uniforms: Record<string, { value: unknown }>; fragmentShader: string }, color: THREE.Color) {
   shader.uniforms.redReflection = { value: color }
   shader.fragmentShader = `uniform vec3 redReflection;\n${shader.fragmentShader}`
   const source = 'material.iridescenceFresnel = mix('
-  if (!shader.fragmentShader.includes(source)) return
-  shader.fragmentShader = shader.fragmentShader.replace(
-    source,
-    `iridescenceFresnelDielectric = redReflection * dot(iridescenceFresnelDielectric, vec3(0.333333));
+  const redFresnel = `iridescenceFresnelDielectric = redReflection * dot(iridescenceFresnelDielectric, vec3(0.333333));
          iridescenceFresnelMetallic = redReflection * dot(iridescenceFresnelMetallic, vec3(0.333333));
-         material.iridescenceFresnel = mix(`,
+         material.iridescenceFresnel = mix(`
+  if (shader.fragmentShader.includes(source)) {
+    shader.fragmentShader = shader.fragmentShader.replace(source, redFresnel)
+    return
+  }
+  const include = '#include <lights_fragment_begin>'
+  if (!shader.fragmentShader.includes(include)) return
+  shader.fragmentShader = shader.fragmentShader.replace(
+    include,
+    `${include}
+    material.iridescenceFresnel = redReflection * dot(material.iridescenceFresnel, vec3(0.333333));
+    material.iridescenceF0Dielectric = redReflection * dot(material.iridescenceF0Dielectric, vec3(0.333333));
+    material.iridescenceF0Metallic = redReflection * dot(material.iridescenceF0Metallic, vec3(0.333333));`,
   )
 }
 
@@ -245,21 +236,21 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     metalness: 0,
     specularIntensity: 0.35,
     specularColor: highlight,
-    clearcoat: 1,
-    clearcoatRoughness: 0.08,
-    iridescence: 0,
-    iridescenceIOR: 1.5,
-    iridescenceThicknessRange: [100, 180],
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.12,
+    iridescence: 0.15,
+    iridescenceIOR: 1.6,
+    iridescenceThicknessRange: [100, 400],
     emissive: 0xffffff,
     emissiveMap: texture,
     emissiveIntensity: 0.92,
     envMapIntensity: 0.28,
   })
-  const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.72 })
+  const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.2 })
   const materials = POLYGONS.map(() => {
     const material = base.clone()
-    material.onBeforeCompile = (shader) => shadeGlass(shader, reflection, panelH)
-    material.customProgramCacheKey = () => 'red-glass-sheen'
+    material.onBeforeCompile = (shader) => tintIridescence(shader, reflection)
+    material.customProgramCacheKey = () => 'muted-red-iridescence'
     return material
   })
 
@@ -283,29 +274,18 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     disposeShards()
     POLYGONS.forEach((polygon, index) => {
       const minSide = Math.min(panelW, panelH)
-      const crack = minSide * 0.03
-      const depth = minSide * 0.15
-      const bevelReach = depth * 0.62
-      const overflow = Math.max(0, bevelReach - crack)
-      const fitW = panelW - overflow * 2
-      const fitH = panelH - overflow * 2
-      const mapped = polygon.map((point) => {
-        let x = point[0]
-        let y = point[1]
-        if (mobile) [x, y] = [y, x]
-        return [(x - 0.5) * fitW, (0.5 - y) * fitH] as Vec2
-      })
-      const shape = roundedShape(insetPolygon(mapped, crack), minSide * 0.05)
+      const mapped = polygon.map((point) => mapPoint(point, panelW, panelH, mobile))
+      const shape = roundedShape(insetPolygon(mapped, minSide * 0.012), minSide * 0.035)
+      const depth = minSide * 0.045
       const geometry = new THREE.ExtrudeGeometry(shape, {
         depth,
         bevelEnabled: true,
-        bevelThickness: depth * 0.7,
-        bevelSize: depth * 0.62,
-        bevelSegments: 4,
+        bevelThickness: depth * 0.35,
+        bevelSize: depth * 0.3,
+        bevelSegments: 3,
         curveSegments: 8,
       })
       geometry.translate(0, 0, -depth)
-      clampToPanel(geometry, panelW, panelH, (28 * panelH) / Math.max(rect.height, 1))
       const position = geometry.attributes.position
       const uv = geometry.attributes.uv
       const aspect = 16 / 9
@@ -339,6 +319,12 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
       const material = materials[index]
       const mesh = new THREE.Mesh(geometry, material)
       const edge = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 25), lineMaterial)
+      const reach = minSide * 0.055
+      const corners = INNER_POINTS.map((point) =>
+        polygon.includes(point) ? mapPoint(point, panelW, panelH, mobile) : ([Number.NaN, Number.NaN] as Vec2),
+      )
+      const meshCrack = tagCrackVertices(geometry.attributes.position as THREE.BufferAttribute, corners, reach)
+      const edgeCrack = tagCrackVertices(edge.geometry.attributes.position as THREE.BufferAttribute, corners, reach)
       mesh.add(edge)
       const center = mapped.reduce((sum, point) => [sum[0] + point[0] / mapped.length, sum[1] + point[1] / mapped.length] as Vec2, [0, 0] as Vec2)
       const direction = new THREE.Vector3(center[0] / panelW, center[1] / panelH, 0.4 + (index % 3) * 0.25).normalize()
@@ -358,6 +344,10 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
         y: prior?.y ?? { position: 0, velocity: 0 },
         targetX: prior?.targetX ?? 0,
         targetY: prior?.targetY ?? 0,
+        crackMesh: meshCrack.tags,
+        crackEdge: edgeCrack.tags,
+        meshXY: meshCrack.base,
+        edgeXY: edgeCrack.base,
       })
     })
   }
@@ -372,9 +362,6 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     const worldPerPixel = (2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / height
     panelW = rect.width * worldPerPixel
     panelH = rect.height * worldPerPixel
-    crownHeights.forEach((uniform) => {
-      uniform.value = panelH
-    })
     group.position.set(0, -((rect.top - (height - rect.top - rect.height)) / 2) * worldPerPixel, 0)
     const switched = mobile !== rect.mobile
     mobile = rect.mobile
@@ -409,6 +396,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   const dragPlane = new THREE.Plane()
   const hit = new THREE.Vector3()
   const localHit = new THREE.Vector3()
+  let crackLive = false
   let dragIndex = -1
   let pointerId: number | null = null
   let dragZ = 0
@@ -537,6 +525,14 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     }
     point.intensity += ((hover >= 0 || dragIndex >= 0 ? 1.4 : 0) - point.intensity) * ease(6)
     const seconds = now / 1000
+    const springsRest = dragIndex < 0 && shards.every((shard) => Math.abs(shard.x.position) < 1e-3 && Math.abs(shard.y.position) < 1e-3 && Math.abs(shard.x.velocity) < 1e-3 && Math.abs(shard.y.velocity) < 1e-3)
+    const drift = !reduced && springsRest && explode < 0.02
+    const crackOffset: Vec2[] = INNER_POINTS.map((_, index) => {
+      let x = Math.sin(seconds * 0.5 + index * 2.1) * 0.006
+      let y = Math.cos(seconds * 0.4 + index * 1.3) * 0.006
+      if (mobile) [x, y] = [y, x]
+      return drift ? [x * panelW, -y * panelH] : [0, 0]
+    })
     shards.forEach((shard, index) => {
       const held = dragIndex === index || shard.x.position !== 0 || shard.y.position !== 0
       shard.lift += ((held ? 0 : hover === index ? 1 : 0) - shard.lift) * ease(7)
@@ -554,9 +550,14 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
         shard.spin.y * explode + shard.lift * 0.06 * pointer.x + shard.x.position * 0.06,
         shard.spin.z * explode + shard.x.position * 0.025,
       )
-      shard.material.iridescence = 0.35
+      shard.material.iridescence = 0.15
       shard.material.emissiveIntensity = (ready ? 0.92 : 0) * (1 - explode * 0.5) + shard.lift * 0.08
+      if (drift || crackLive) {
+        shiftCracks(shard.mesh.geometry.attributes.position as THREE.BufferAttribute, shard.crackMesh, shard.meshXY, crackOffset)
+        shiftCracks(shard.edge.geometry.attributes.position as THREE.BufferAttribute, shard.crackEdge, shard.edgeXY, crackOffset)
+      }
     })
+    crackLive = drift
     copy.style.transform = `perspective(1400px) rotateX(${(-tilt.x * 180) / Math.PI}deg) rotateY(${(tilt.y * 180) / Math.PI}deg) translate3d(${-explode * 140}px, ${-explode * 60}px, ${explode * 80}px)`
     copy.style.opacity = String(Math.max(0, 1 - explode * 1.2))
     renderer.render(scene, camera)
