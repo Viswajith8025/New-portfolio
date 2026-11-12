@@ -57,11 +57,15 @@ const FRAG = `
     float edge = smoothstep(1.5, -1.2, field);
     if (edge < 0.01) discard;
     vec2 light = normalize(vec2(-0.45, -0.8));
-    float dome = clamp(0.55 + 0.45 * dot(normalize(pixel / max(halfSize, vec2(1.0))), light), 0.0, 1.0);
+    vec2 shade = normalize(pixel / max(halfSize, vec2(1.0)));
+    float dome = clamp(0.55 + 0.45 * dot(shade, light), 0.0, 1.0);
     vec3 col = mix(vec3(0.01, 0.005, 0.008), vec3(0.08, 0.02, 0.03), dome);
-    float rim = smoothstep(8.0, 0.0, abs(field));
-    col += vec3(1.0, 0.07, 0.22) * rim * 0.85;
-    col += vec3(1.0, 0.15, 0.25) * exp(-max(field, 0.0) * 0.08) * 0.25;
+    float rim = smoothstep(2.5, 0.0, abs(field));
+    col += vec3(1.0, 0.07, 0.22) * rim * 0.9;
+    float outside = smoothstep(0.0, 1.0, field);
+    col += vec3(1.0, 0.15, 0.25) * exp(-field * 0.12) * 0.35 * outside;
+    float spec = pow(clamp(dot(shade, normalize(vec2(-0.25, 0.97))), 0.0, 1.0), 36.0);
+    col += vec3(0.95, 0.96, 0.98) * spec * 0.38 * (1.0 - rim);
     for (int i = 0; i < 6; i++) {
       if (float(i) >= uRippleCount) break;
       vec3 ripple = uRipples[i];
@@ -229,14 +233,14 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
   canvas.addEventListener('webglcontextlost', onLost)
 
   const stepPhysics = (dt: number) => {
-    const halfW = Math.max(canvas.width * 0.5 - 150, 70)
+    const halfW = half.x
     strands.forEach((strand, index) => {
       if (index >= Math.round(6 * quality)) {
         strand.alive = false
         return
       }
       const originX = Math.cos(strand.angle) * halfW
-      const originY = Math.sin(strand.angle) * 30
+      const originY = Math.sin(strand.angle) * half.y
       if (!hovering) {
         strand.vx += (0 - strand.tipX) * 8 * dt
         strand.vy += (0 - strand.tipY) * 8 * dt
@@ -297,11 +301,11 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.useProgram(program)
     gl.bindVertexArray(vao)
-    const halfW = Math.max(canvas.width * 0.5 - 150, 70)
+    const halfW = half.x
     strandData.fill(0)
     strands.forEach((strand, index) => {
       const originX = Math.cos(strand.angle) * (strand.alive ? 1 : 0) * halfW
-      const originY = Math.sin(strand.angle) * (strand.alive ? 1 : 0) * 30
+      const originY = Math.sin(strand.angle) * (strand.alive ? 1 : 0) * half.y
       strandData[index * 4] = originX
       strandData[index * 4 + 1] = originY
       strandData[index * 4 + 2] = originX + strand.tipX

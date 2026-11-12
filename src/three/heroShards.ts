@@ -189,7 +189,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     emissiveIntensity: 0.92,
     envMapIntensity: 0.28,
   })
-  const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.2 })
+  const lineMaterial = new THREE.LineBasicMaterial({ color: highlight, transparent: true, opacity: 0.55 })
   const materials = POLYGONS.map(() => {
     const material = base.clone()
     material.onBeforeCompile = (shader) => tintIridescence(shader, reflection)
@@ -223,12 +223,12 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
         return [(x - 0.5) * panelW, (0.5 - y) * panelH] as Vec2
       })
       const shape = roundedShape(insetPolygon(mapped, Math.min(panelW, panelH) * 0.012), Math.min(panelW, panelH) * 0.035)
-      const depth = Math.min(panelW, panelH) * 0.045
+      const depth = Math.min(panelW, panelH) * 0.08
       const geometry = new THREE.ExtrudeGeometry(shape, {
         depth,
         bevelEnabled: true,
-        bevelThickness: depth * 0.35,
-        bevelSize: depth * 0.3,
+        bevelThickness: depth * 0.55,
+        bevelSize: depth * 0.45,
         bevelSegments: 3,
         curveSegments: 8,
       })
