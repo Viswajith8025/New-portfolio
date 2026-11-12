@@ -54,13 +54,7 @@ export function Contact() {
             <span className="block text-xs font-bold tracking-[0.2em] text-gray-400">WHATSAPP</span>
             <span className="text-sm font-extrabold whitespace-nowrap text-white sm:text-base md:text-xl">{profile.whatsapp.number}</span>
           </span>
-          <span className="whatsapp-cta ml-auto text-sm font-bold">Chat now →</span>
         </a>
-        <div className="mb-8 grid gap-3 text-sm text-gray-300 md:grid-cols-3">
-          <a href={`mailto:${profile.email}`} className="break-all hover:text-white">{profile.email}</a>
-          <a href={profile.phoneHref} className="hover:text-white">{profile.phone}</a>
-          <span>{profile.location}</span>
-        </div>
         <div className="relative">
           <div className="red-halo" />
           <form onSubmit={onSubmit} className="glass glass-panel-card relative rounded-3xl p-5 sm:p-8 md:p-14">
@@ -91,7 +85,12 @@ export function Contact() {
             )}
           </form>
         </div>
-        <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm font-bold tracking-widest text-gray-400 uppercase">
+        <div className="mt-8 grid gap-3 text-sm text-gray-300 md:grid-cols-3">
+          <a href={`mailto:${profile.email}`} className="break-all hover:text-white">{profile.email}</a>
+          <a href={profile.phoneHref} className="hover:text-white">{profile.phone}</a>
+          <span>{profile.location}</span>
+        </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm font-bold tracking-widest text-gray-400 uppercase">
           <a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-red-500">LinkedIn</a>
           <a href={profile.github} target="_blank" rel="noreferrer" className="hover:text-red-500">GitHub</a>
         </div>

@@ -54,24 +54,24 @@ export function ProjectModal({ index, onClose, onIndex }: ProjectModalProps) {
   return (
     <AnimatePresence>
       {project && index !== null && (
-        <motion.div className="fixed inset-0 z-[80] flex items-center justify-center p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+        <motion.div className="fixed inset-0 z-[80] flex items-center justify-center p-3 md:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
           <div className="absolute inset-0 bg-black/55 backdrop-blur-2xl" />
           <motion.div
             ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="project-title"
-            className="glass glass-strong relative z-10 max-h-[92dvh] w-full max-w-4xl overflow-auto rounded-3xl border-[#ff334b]/35 shadow-2xl shadow-red-950/50"
+            className="glass glass-strong relative z-10 max-h-[456px] w-full max-w-[366px] overflow-auto rounded-3xl border-[#ff334b]/35 shadow-2xl shadow-red-950/50 md:max-h-[92dvh] md:max-w-4xl"
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 16 }}
             transition={{ duration: 0.25 }}
             onClick={(event) => event.stopPropagation()}
           >
-            <header className="flex items-start justify-between gap-4 p-5 md:p-7">
-              <div>
-                <span className="glass-chip-red inline-flex rounded-full px-3 py-1 text-[10px] font-black tracking-wider text-white uppercase">{project.category}</span>
-                <h3 id="project-title" className="mt-3 text-2xl font-black text-white md:text-4xl">{project.title}</h3>
+            <header className="flex items-center justify-between gap-3 p-4 md:items-start md:p-7">
+              <div className="flex min-w-0 items-center gap-2 md:block">
+                <span className="glass-chip-red inline-flex shrink-0 rounded-full px-3 py-1 text-[10px] font-black tracking-wider text-white uppercase">{project.category}</span>
+                <h3 id="project-title" className="min-w-0 truncate text-sm font-black text-white md:mt-3 md:overflow-visible md:text-4xl md:whitespace-normal">{project.title}</h3>
               </div>
               <div className="flex gap-2">
                 <button type="button" aria-label="Previous project" className="glass-chip rounded-full p-2" onClick={() => onIndex((index - 1 + projects.length) % projects.length)}>
