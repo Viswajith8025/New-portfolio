@@ -7,7 +7,7 @@ export function Skills() {
   const ref = useRef<HTMLElement>(null)
   useReveal(ref, '[data-reveal]')
   return (
-    <section id="skills" ref={ref} className="border-t border-white/5 px-5 py-20 md:px-12 md:py-28 lg:px-20">
+    <section id="skills" ref={ref} className="border-t border-white/5 px-5 py-28 md:px-12 lg:px-20">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center text-center">
           <p data-reveal className="text-sm font-bold tracking-[0.2em] text-[#a31515] uppercase md:text-base">Arsenal & Expertise</p>

@@ -95,7 +95,7 @@ export function Stats() {
         <div className="stat-rim" />
         <div className="relative grid grid-cols-3 divide-x divide-white/20">
           {stats.map((stat) => (
-            <div key={stat.id} className="stat-cq flex min-w-0 flex-col items-center px-2 py-8 text-center sm:px-3 md:items-start md:px-8 md:py-20 md:text-left lg:px-10">
+            <div key={stat.id} className="stat-cq flex min-w-0 flex-col items-center px-2 py-11 text-center sm:px-3 md:items-start md:px-8 md:py-20 md:text-left lg:px-10">
               <div className="flex w-full min-w-0 flex-col-reverse">
                 <p data-label className="text-[9px] leading-tight font-semibold tracking-[0.08em] text-gray-300 uppercase sm:text-[10px] sm:tracking-[0.16em] md:text-base">{stat.label}</p>
                 <div data-bar className="mt-3 h-1 w-8 origin-left rounded-full bg-[#a31515] md:mt-6 md:w-12" />
