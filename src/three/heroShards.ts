@@ -109,6 +109,33 @@ function stepSpring(state: Spring, target: number, dt: number) {
   }
 }
 
+function clampToPanel(geometry: THREE.ExtrudeGeometry, panelW: number, panelH: number, radius: number) {
+  const position = geometry.attributes.position
+  const halfW = panelW / 2
+  const halfH = panelH / 2
+  const curve = Math.min(radius, halfW, halfH)
+  const limitX = halfW - curve
+  const limitY = halfH - curve
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i)
+    const y = position.getY(i)
+    let ax = Math.min(Math.abs(x), halfW)
+    let ay = Math.min(Math.abs(y), halfH)
+    if (ax > limitX && ay > limitY) {
+      const dx = ax - limitX
+      const dy = ay - limitY
+      const length = Math.hypot(dx, dy)
+      if (length > curve) {
+        ax = limitX + (dx / length) * curve
+        ay = limitY + (dy / length) * curve
+      }
+    }
+    position.setXY(i, Math.sign(x) * ax, Math.sign(y) * ay)
+  }
+  position.needsUpdate = true
+  geometry.computeVertexNormals()
+}
+
 function clampDrag(value: number, size: number) {
   const limit = size * 0.12
   return Math.max(-limit, Math.min(limit, value))
@@ -146,8 +173,8 @@ function shadeGlass(
       `{
       float height01 = clamp(vCrown / max(uPanelH, 0.001) + 0.5, 0.0, 1.0);
       float facing = pow(clamp(dot(normalize(normal), vec3(0.0, 0.42, 0.91)), 0.0, 1.0), 1.35);
-      float frost = smoothstep(0.38, 0.9, height01) * facing;
-      outgoingLight += vec3(1.0, 0.8, 0.84) * frost * 0.85;
+      float frost = smoothstep(0.78, 0.98, height01) * facing;
+      outgoingLight += vec3(1.0, 0.34, 0.4) * frost * 0.16;
     }
     #include <opaque_fragment>`,
     )
@@ -197,9 +224,6 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   const key = new THREE.DirectionalLight(0xffe8e8, 0.7)
   key.position.set(-4, 5, 6)
   scene.add(key)
-  const crown = new THREE.DirectionalLight(0xffd0d8, 1.15)
-  crown.position.set(0, 8, 3)
-  scene.add(crown)
   const rim = new THREE.DirectionalLight(highlight, 0.45)
   rim.position.set(5, -3, 2)
   scene.add(rim)
@@ -235,7 +259,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
   const materials = POLYGONS.map(() => {
     const material = base.clone()
     material.onBeforeCompile = (shader) => shadeGlass(shader, reflection, panelH)
-    material.customProgramCacheKey = () => 'red-glass-crown'
+    material.customProgramCacheKey = () => 'red-glass-sheen'
     return material
   })
 
@@ -258,14 +282,20 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
     const previous = keep ?? shards
     disposeShards()
     POLYGONS.forEach((polygon, index) => {
+      const minSide = Math.min(panelW, panelH)
+      const crack = minSide * 0.03
+      const depth = minSide * 0.15
+      const bevelReach = depth * 0.62
+      const overflow = Math.max(0, bevelReach - crack)
+      const fitW = panelW - overflow * 2
+      const fitH = panelH - overflow * 2
       const mapped = polygon.map((point) => {
         let x = point[0]
         let y = point[1]
         if (mobile) [x, y] = [y, x]
-        return [(x - 0.5) * panelW, (0.5 - y) * panelH] as Vec2
+        return [(x - 0.5) * fitW, (0.5 - y) * fitH] as Vec2
       })
-      const shape = roundedShape(insetPolygon(mapped, Math.min(panelW, panelH) * 0.03), Math.min(panelW, panelH) * 0.05)
-      const depth = Math.min(panelW, panelH) * 0.15
+      const shape = roundedShape(insetPolygon(mapped, crack), minSide * 0.05)
       const geometry = new THREE.ExtrudeGeometry(shape, {
         depth,
         bevelEnabled: true,
@@ -275,6 +305,7 @@ export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTML
         curveSegments: 8,
       })
       geometry.translate(0, 0, -depth)
+      clampToPanel(geometry, panelW, panelH, (28 * panelH) / Math.max(rect.height, 1))
       const position = geometry.attributes.position
       const uv = geometry.attributes.uv
       const aspect = 16 / 9
