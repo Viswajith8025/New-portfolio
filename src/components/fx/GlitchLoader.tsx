@@ -29,8 +29,7 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
     let loaded = document.readyState === 'complete' ? 1 : 0
     let scene = 0
     const started = performance.now()
-    const narrow = window.matchMedia('(max-width: 767px)').matches
-    const sources = narrow ? ['/hero/hero-mobile.webp'] : [profile.hero, profile.portrait]
+    const sources = [profile.hero, profile.portrait]
     sources.forEach((src) => {
       const image = new Image()
       const finish = () => {
@@ -52,7 +51,6 @@ export function GlitchLoader({ onComplete }: GlitchLoaderProps) {
     const tick = (now: number) => {
       const elapsed = now - started
       if (document.querySelector('[data-scene-ready]')) scene = 1
-      else if (narrow && images >= 0.99) scene = 1
       else if (elapsed > 3500) scene = 1
       target = Math.min(1, images * 0.45 + fonts * 0.2 + loaded * 0.15 + scene * 0.2)
       target = Math.min(target, elapsed / 2000)

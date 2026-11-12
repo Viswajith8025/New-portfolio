@@ -130,12 +130,11 @@ function tintIridescence(shader: { uniforms: Record<string, { value: unknown }>;
 export function mountHeroShards(root: HTMLElement, host: HTMLElement, copy: HTMLElement) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const coarse = window.matchMedia('(pointer: coarse)').matches
-  const lowPower = (navigator.hardwareConcurrency || 8) <= 4
   const reflection = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--glass-reflection').trim() || '#8b1118')
   const highlight = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--glass-highlight').trim() || '#d94a52')
 
   const renderer = new THREE.WebGLRenderer({ antialias: !coarse, alpha: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1 : coarse ? 1.25 : 1.5))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
   renderer.setClearColor(0x000000, 0)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
