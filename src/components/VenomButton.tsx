@@ -16,9 +16,7 @@ export function VenomButton({ children, href, type = 'button', className, disabl
   const labelRef = useRef(children)
   const [webgl, setWebgl] = useState(true)
   const width = Math.max(180, children.length * 11 + 64)
-  const plain =
-    typeof window !== 'undefined' &&
-    (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const plain = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   useEffect(() => {
     labelRef.current = children
@@ -48,7 +46,7 @@ export function VenomButton({ children, href, type = 'button', className, disabl
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF1238]',
     className,
   )
-  const style = { minWidth: `min(100%, ${width}px)`, maxWidth: '100%', height: 56 }
+  const style = { minWidth: `min(100%, ${width}px)`, maxWidth: '100%', height: 60 }
   const label = <span className="relative z-10 px-2">{children}</span>
   const canvas =
     webgl && !plain ? (

@@ -171,13 +171,12 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
   let pointerDistance = 999
   let onScreen = true
   const button = canvas.closest('a, button')
-  const coarse = window.matchMedia('(pointer: coarse)').matches
 
   const resize = () => {
     const bounds = button?.getBoundingClientRect()
     const width = Math.min(Math.ceil((bounds?.width ?? 220) + 320), window.innerWidth)
     const height = Math.ceil((bounds?.height ?? 60) + 320)
-    const ratio = Math.min(window.devicePixelRatio || 1, coarse || quality < 1 ? 1 : 1.5)
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5)
     canvas.width = Math.round(width * ratio)
     canvas.height = Math.round(height * ratio)
     canvas.style.width = `${width}px`
@@ -269,9 +268,14 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
     }
   }
 
-  const tick = (now: number) => {
-    frame = requestAnimationFrame(tick)
+  const schedule = () => {
+    cancelAnimationFrame(frame)
     if (!onScreen || document.hidden) return
+    frame = requestAnimationFrame(tick)
+  }
+  const tick = (now: number) => {
+    if (!onScreen || document.hidden) return
+    frame = requestAnimationFrame(tick)
     const dt = Math.min((now - last) / 1000, 0.05)
     last = now
     const alive = strands.some((strand) => strand.alive) || ripples.length > 0
@@ -318,23 +322,39 @@ export function mountVenom(canvas: HTMLCanvasElement, label: string): VenomHandl
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
   }
-  frame = requestAnimationFrame(tick)
   const resizeObserver = new ResizeObserver(resize)
   const screenObserver = new IntersectionObserver(
     ([entry]) => {
       onScreen = entry?.isIntersecting ?? true
+      if (onScreen) {
+        last = performance.now()
+        schedule()
+      } else {
+        cancelAnimationFrame(frame)
+      }
     },
     { rootMargin: '100px' },
   )
+  const onVisibility = () => {
+    if (document.hidden || !onScreen) {
+      cancelAnimationFrame(frame)
+      return
+    }
+    last = performance.now()
+    schedule()
+  }
+  document.addEventListener('visibilitychange', onVisibility)
   if (button) {
     resizeObserver.observe(button)
     screenObserver.observe(button)
   }
+  schedule()
 
   return {
     setLabel: paintLabel,
     stop: () => {
     cancelAnimationFrame(frame)
+    document.removeEventListener('visibilitychange', onVisibility)
     resizeObserver.disconnect()
     screenObserver.disconnect()
     button?.removeEventListener('pointerdown', onDown)
