@@ -6,9 +6,13 @@ const CAM_Z = 9
 const CARD_W = 3.4
 const SPACING = 0.13
 const RAIL_SPAN = 1.7
-const FLY_SPAN = 0.35
-const HOLD = 0.12
+const FLY_SPAN = 0.55
+const FADE = 0.12
 const ASPECT = 16 / 9
+const VISIBLE_ROWS = 3
+const INTRO_VH = 155
+const PAN_VH = 100
+const HOLD_VH = 130
 
 const RAIL = [
   [0, 3, -60],
@@ -77,16 +81,23 @@ function easeInOutCubic(value: number) {
   return value < 0.5 ? 4 * value * value * value : 1 - (-2 * value + 2) ** 3 / 2
 }
 
-function span(count: number) {
-  return RAIL_SPAN + FLY_SPAN + (count - 1) * SPACING + HOLD
+function linger(value: number) {
+  const t = clamp01(value)
+  const centered = (t - 0.5) * 2
+  const shaped = Math.sign(centered) * Math.abs(centered) ** 1.7
+  return clamp01(0.5 + shaped / 2)
 }
 
-function cardProgress(progress: number, index: number, count: number) {
-  const raw = clamp01(progress) * span(count) - index * SPACING
+function introUnits(count: number) {
+  return RAIL_SPAN + FLY_SPAN + Math.max(count - 1, 0) * SPACING
+}
+
+function cardProgress(introT: number, index: number, units: number) {
+  const raw = clamp01(introT) * units - index * SPACING
   return {
     rail: clamp01(raw / RAIL_SPAN),
     fly: clamp01((raw - RAIL_SPAN) / FLY_SPAN),
-    opacity: raw <= 0 ? 0 : Math.min(1, raw / HOLD),
+    opacity: raw <= 0 ? 0 : Math.min(1, raw / FADE),
   }
 }
 
@@ -95,27 +106,31 @@ function gridLayout(count: number, width: number, height: number) {
   const aspect = width / Math.max(height, 1)
   const viewWidth = viewHeight * aspect
   const cols = aspect < 0.8 ? 2 : 3
-  const rows = Math.ceil(count / cols)
+  const rows = Math.ceil(count / Math.max(cols, 1))
+  const visibleRows = Math.max(1, Math.min(rows, VISIBLE_ROWS))
   const reserved = viewHeight * (aspect < 0.8 ? 0.34 : 0.4)
   const area = viewHeight - reserved - viewHeight * 0.04
   const gap = Math.min(viewWidth, viewHeight) * 0.025
-  let cellW = Math.min((viewWidth * 0.92 - gap * (cols - 1)) / cols, ((area - gap * (rows - 1)) / rows) * ASPECT)
+  let cellW = Math.min((viewWidth * 0.92 - gap * (cols - 1)) / cols, ((area - gap * (visibleRows - 1)) / visibleRows) * ASPECT)
   cellW = Math.max(cellW, 0.5)
   const cellH = cellW / ASPECT
   const gridW = cols * cellW + (cols - 1) * gap
-  const gridH = rows * cellH + (rows - 1) * gap
+  const gridH = visibleRows * cellH + (visibleRows - 1) * gap
   const top = viewHeight / 2 - reserved - (area - gridH) / 2
+  const stride = cellH + gap
   const cells = Array.from({ length: count }, (_, index) => {
     const col = index % cols
     const row = Math.floor(index / cols)
     return {
       x: -gridW / 2 + cellW / 2 + col * (cellW + gap),
-      y: top - cellH / 2 - row * (cellH + gap),
+      y: top - cellH / 2 - row * stride,
       side: cols > 1 && col === 0 ? -1 : cols > 1 && col === cols - 1 ? 1 : 0,
       vert: row === 0 ? 1 : row === rows - 1 ? -1 : 0,
     }
   })
-  return { cells, cellW, cellH }
+  const extraRows = Math.max(0, rows - visibleRows)
+  const overflow = extraRows * stride + (extraRows > 0 ? stride * 0.58 : 0)
+  return { cells, cellW, cellH, extraRows, overflow }
 }
 
 function fitCover(material: THREE.ShaderMaterial, width: number, height: number) {
@@ -229,6 +244,21 @@ export function mountProjectsRail(
   let height = 1
   let cardFit = 1
   let layout = gridLayout(cards.length, 1, 1)
+  let scrollMap = { intro: 1, panStart: 1, pan: 0 }
+  let target = 0
+  let progress = 0
+  let active = true
+  let kick = () => {}
+  const readScroll = () => {
+    const bounds = section.getBoundingClientRect()
+    const distance = bounds.height - window.innerHeight
+    target = distance > 0 ? Math.max(0, Math.min(1, -bounds.top / distance)) : 0
+    const near = bounds.bottom > -250 && bounds.top < window.innerHeight + 250
+    if (near !== active) {
+      active = near
+      kick()
+    }
+  }
   const resize = () => {
     width = stage.clientWidth
     height = stage.clientHeight
@@ -236,25 +266,26 @@ export function mountProjectsRail(
     camera.aspect = width / Math.max(height, 1)
     camera.updateProjectionMatrix()
     layout = gridLayout(cards.length, width, height)
+    const units = introUnits(cards.length)
+    const introVh = units * INTRO_VH
+    const panVh = layout.extraRows * PAN_VH
+    const total = Math.max(introVh + panVh + HOLD_VH, 1)
+    section.style.height = `${Math.round(100 + total)}vh`
+    scrollMap = { intro: introVh / total, panStart: introVh / total, pan: panVh / total }
     const viewHeight = 2 * CAM_Z * Math.tan(((FOV / 2) * Math.PI) / 180)
     const viewWidth = viewHeight * camera.aspect
     const closestZ = coarse ? 2.5 : 3.2
     const magnification = CAM_Z / (CAM_Z - closestZ)
     cardFit = Math.min(1, (viewWidth * 0.86) / (CARD_W * magnification))
+    const heading = stage.querySelector('[data-project-heading]')
+    if (heading instanceof HTMLElement) {
+      const cut = Math.ceil(heading.getBoundingClientRect().bottom - stage.getBoundingClientRect().top) + 12
+      renderer.domElement.style.clipPath = `inset(${Math.max(cut, 0)}px 0 0 0)`
+    }
+    readScroll()
   }
   resize()
 
-  let target = 0
-  let progress = 0
-  const readScroll = () => {
-    const bounds = section.getBoundingClientRect()
-    const distance = bounds.height - window.innerHeight
-    target = distance > 0 ? Math.max(0, Math.min(1, -bounds.top / distance)) : 0
-  }
-  readScroll()
-
-  let active = true
-  let kick = () => {}
   const stageObserver = new IntersectionObserver(
     ([entry]) => {
       active = entry?.isIntersecting ?? true
@@ -332,11 +363,15 @@ export function mountProjectsRail(
     const dt = Math.min((now - last) / 1000, 0.05)
     last = now
     if (!active) return
-    progress += (target - progress) * (1 - Math.exp(-7 * dt))
+    progress += (target - progress) * (1 - Math.exp(-4.2 * dt))
     if (Math.abs(target - progress) < 1e-5) progress = target
+    const units = introUnits(cards.length)
+    const introT = scrollMap.intro > 0 ? clamp01(progress / scrollMap.intro) : 1
+    const panT = scrollMap.pan > 0 ? clamp01((progress - scrollMap.panStart) / scrollMap.pan) : 0
+    const panY = layout.overflow * panT
     cards.forEach((card, index) => {
-      const state = cardProgress(progress, index, cards.length)
-      sample(state.rail, position, tangent)
+      const state = cardProgress(introT, index, units)
+      sample(linger(state.rail), position, tangent)
       flat.set(tangent.x, 0, tangent.z)
       if (flat.lengthSq() < 1e-4) flat.set(1, 0, 0)
       flat.normalize()
@@ -353,8 +388,8 @@ export function mountProjectsRail(
         card.mesh.scale.setScalar(cardScale)
       } else {
         sample(1, end, tangent)
-        goal.set(cell.x, cell.y, 0)
-        control.set(cell.x + cell.side * layout.cellW * 0.9, cell.y + cell.vert * layout.cellH * 1.6, 1.2)
+        goal.set(cell.x, cell.y + panY, 0)
+        control.set(cell.x + cell.side * layout.cellW * 0.9, cell.y + panY + cell.vert * layout.cellH * 1.6, 1.2)
         const t = easeInOutCubic(state.fly)
         const n = 1 - t
         card.mesh.position.set(
@@ -425,5 +460,6 @@ export function mountProjectsRail(
     placeholder.dispose()
     renderer.dispose()
     renderer.domElement.remove()
+    section.style.height = ''
   }
 }

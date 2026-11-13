@@ -69,7 +69,7 @@ export const about = {
 
 export const experience: Experience[] = [
   {
-    org: 'Emilda & co',
+    org: 'Demo Vendor Co.',
     role: 'Software Engineer (FDE)',
     dates: '06/2026 · Calicut',
     bullets: [
@@ -122,7 +122,7 @@ export const projects: Project[] = [
     title: 'Field Sales & Operations Platform',
     subtitle: 'GPS-gated visits and offline sync',
     category: 'Field Ops',
-    poster: '/thumbnails/opsvisor.webp',
+    poster: '/thumbnails/operations-admin.webp',
     description:
       'Field-sales stack where visits must start within 50 m of the shop, GPS trails ride the open sale cycle, and offline negotiate/complete share one session id.',
     features: [
@@ -136,7 +136,7 @@ export const projects: Project[] = [
     title: 'Fuel Station Management System',
     subtitle: 'Shift face check and pump sync',
     category: 'Station OS',
-    poster: '/thumbnails/kpnfuel.webp',
+    poster: '/thumbnails/fuelbunk-os.webp',
     description:
       'Station OS with on-device face anti-spoof for shift open/close, live BOS pump sync, and a digest-only WhatsApp bridge.',
     features: [
@@ -164,7 +164,7 @@ export const projects: Project[] = [
     title: 'Resort Attendance & Housekeeping Ops',
     subtitle: 'Face punch and evening digests',
     category: 'Hospitality Ops',
-    poster: '/thumbnails/rozana.webp',
+    poster: '/thumbnails/resort-app.webp',
     description:
       'Multi-property resort ops app where staff punch with AWS Rekognition face match, housekeeping needs photo proof, and owners get Baileys EOD WhatsApp digests.',
     features: [
@@ -178,7 +178,7 @@ export const projects: Project[] = [
     title: 'Lending & Loan Operations Platform',
     subtitle: 'Paise schedules and cash routes',
     category: 'Lending',
-    poster: '/thumbnails/7horses.webp',
+    poster: '/thumbnails/blade-finance.webp',
     description:
       'Multi-role lending OS — paise-exact loan schedules, field cash routes with once-only handover, and bilingual EN/Tamil desks.',
     features: [

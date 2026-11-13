@@ -6,7 +6,7 @@ import { useReveal } from '../../hooks/useReveal'
 import { Button } from '../ui/button'
 import { ProjectVideoCard } from './ProjectVideoCard'
 
-const featuredProjects = projects.filter((project) => project.featured)
+const railProjects = [...projects.filter((project) => project.featured), ...projects.filter((project) => !project.featured)]
 
 type ProjectsProps = { onSelect: (index: number) => void }
 
@@ -28,8 +28,8 @@ export function Projects({ onSelect }: ProjectsProps) {
     let stop = () => {}
     void import('../../three/projectsRail').then(({ mountProjectsRail }) => {
       if (cancel) return
-      const mounted = mountProjectsRail(section, stage, tooltip, featuredProjects, (railIndex) => {
-        const id = featuredProjects[railIndex]?.id
+      const mounted = mountProjectsRail(section, stage, tooltip, railProjects, (railIndex) => {
+        const id = railProjects[railIndex]?.id
         const full = projects.findIndex((project) => project.id === id)
         if (full >= 0) onSelect(full)
       })
@@ -45,7 +45,7 @@ export function Projects({ onSelect }: ProjectsProps) {
   const grid = reduced || fallback
 
   return (
-    <section id="projects" ref={sectionRef} className={`relative border-t border-white/5 ${grid ? 'px-5 py-28 md:px-12 lg:px-20' : 'h-[420vh]'}`}>
+    <section id="projects" ref={sectionRef} className={`relative border-t border-white/5 ${grid ? 'px-5 py-28 md:px-12 lg:px-20' : 'min-h-screen'}`}>
       <div className={grid ? '' : 'sticky top-0 h-screen overflow-hidden'}>
         <div ref={stageRef} className={grid ? '' : 'absolute inset-0 z-10'} data-no-ripple>
           <div data-project-heading className={grid ? 'mx-auto mb-14 max-w-7xl text-center' : 'pointer-events-none absolute top-24 right-0 left-0 z-20 px-5 text-center'}>
@@ -78,7 +78,7 @@ export function Projects({ onSelect }: ProjectsProps) {
         {grid && (
           <div data-project-fallback>
             <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
-              {featuredProjects.map((project) => {
+              {railProjects.map((project) => {
                 const index = projects.findIndex((item) => item.id === project.id)
                 return (
                   <Button key={project.id} variant="ghost" className="glass glass-panel-card h-auto flex-col items-stretch overflow-hidden rounded-2xl p-0 text-left whitespace-normal" onClick={() => onSelect(index)}>
